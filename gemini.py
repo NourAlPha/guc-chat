@@ -9,10 +9,6 @@ import google.generativeai as genai
 from langchain.prompts import PromptTemplate
 import time
 
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY")) # Loads API key
-
-model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0.5)
-
 def get_pdf_text(pdf_docs_path):
     # Get a list of all PDF documents in the specified folder
     pdf_docs = [os.path.join(pdf_docs_path, f) for f in os.listdir(pdf_docs_path) if f.endswith(".pdf")]
@@ -36,15 +32,15 @@ def get_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
-def get_vector_store(text_chunks):     
-    # Create embeddings using a Google Generative AI model
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-
+def get_vector_store(text_chunks):
     # Create a vector store using FAISS from the provided text chunks and embeddings
-    vector_store = FAISS.from_texts(text_chunks, embedding=embeddings)
+    vector_store = FAISS.from_texts(text_chunks, embedding=st.session_state.embeddings)
 
     # Save the vector store locally with the name "faiss_index"
     vector_store.save_local("faiss_index")
+    
+    # Load a FAISS vector database from a local file
+    st.session_state.new_db = FAISS.load_local("faiss_index", st.session_state.embeddings, allow_dangerous_deserialization=True)
 
 def get_conversational_chain_docs():
     # Define a prompt template for asking questions based on a given context
@@ -65,25 +61,16 @@ def get_conversational_chain_docs():
     )
 
     # Load a question-answering chain with the specified model and prompt
-    chain = load_qa_chain(llm=model, chain_type="stuff", prompt=prompt)
+    chain = load_qa_chain(llm=st.session_state.model, chain_type="stuff", prompt=prompt)
 
     return chain
 
 def user_input(user_question):
-    # Create embeddings for the user question using a Google Generative AI model
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-
-    # Load a FAISS vector database from a local file
-    new_db = FAISS.load_local("faiss_index", embeddings, allow_dangerous_deserialization=True)
-
     # Perform similarity search in the vector database based on the user question
-    docs = new_db.similarity_search(user_question)
-
-    # Obtain a conversational question-answering chain
-    chain = get_conversational_chain_docs()
+    docs = st.session_state.new_db.similarity_search(user_question)
 
     # Use the conversational chain to get a response based on the user question and retrieved documents
-    response = chain(
+    response = st.session_state.chain(
         {
             "input_documents": docs,
             "question": user_question,
@@ -114,18 +101,21 @@ def modify_output(input):
         time.sleep(0.05)
 
 def main():
-    raw_text = get_pdf_text("blogposts")
-    text_chunks = get_chunks(raw_text)
-    get_vector_store(text_chunks)
-
+    # Initialize session state with needed variables
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+        st.session_state.model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0.5)
+        st.session_state.embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        raw_text = get_pdf_text("blogposts")
+        text_chunks = get_chunks(raw_text)
+        get_vector_store(text_chunks)
+        st.session_state.chain = get_conversational_chain_docs()
+        genai.configure(api_key=os.getenv("GOOGLE_API_KEY")) # Loads API key
     # Set page configuration including title and icon
     st.set_page_config(page_title="ChatBot",
                     page_icon="🤔")
     # Display the title of the chat interface
     st.title("💭 Chat with GUC Bot")
-    # Initialize session state to store chat messages if not already present
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
     # Display previous chat messages
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
