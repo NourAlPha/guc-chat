@@ -15,7 +15,7 @@ def main():
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
     # Accept user input in the chat interface
-    if prompt := st.chat_input("What is your question?"):
+    if prompt := st.chat_input("💭 What's in your mind?"):
         # Display user input as a chat message
         with st.chat_message("user"):
             st.markdown(prompt)
