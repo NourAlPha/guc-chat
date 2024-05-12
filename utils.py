@@ -52,6 +52,9 @@ def update_vector_store(text_chunks):
 
     # Save the vector store locally with the name "faiss_index"
     vector_store.save_local("faiss_index")
+    
+    # Load a FAISS vector database from a local file
+    st.session_state.new_db = FAISS.load_local("faiss_index", st.session_state.embeddings, allow_dangerous_deserialization=True)
 
 def get_conversational_chain_docs():
     # Define a prompt template for asking questions based on a given context
