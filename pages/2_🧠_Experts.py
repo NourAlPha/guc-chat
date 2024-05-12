@@ -25,7 +25,7 @@ raw_text = st.text_area("Enter your response here:", key=f"text_area_{st.session
 def save_response():
     length = len(os.listdir("text_files"))
     with open(f"text_files/expert_responses{length}.txt", "a") as f:
-        f.write(raw_text + "\n")
+        f.write(raw_text + "\n\n\n")
     process_vector_space()
     st.session_state.text_area_key += 1
     
