@@ -1,0 +1,10 @@
+credentials:
+  usernames:
+    admin:
+      email: admin@guc.edu.com
+      name: admin
+      password: $2b$12$fZBCLIOUkZP/JrT9ij4p6erUDV0UYTyLxvvsM4uQxIVMNxxeer.am
+cookie:
+  expiry_days: 30
+  key: random_signature_key # Must be string
+  name: random_cookie_name
