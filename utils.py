@@ -101,6 +101,9 @@ def user_input(user_question):
             "chat_history": st.session_state.messages
         },
         return_only_outputs=True)
+
+    # Print the response to the console
+    print(response["output_text"])
     
     # return response
     return response
