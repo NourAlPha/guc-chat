@@ -10,6 +10,9 @@ def main():
                     page_icon="🤔")
     # Display the title of the chat interface
     st.title("💭 What's in your mind?")
+    # Add a refresh button to clear the chat interface
+    if st.sidebar.button("🔄 Refresh"):
+        st.session_state.messages = []
     # Display previous chat messages
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
