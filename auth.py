@@ -16,12 +16,13 @@ def authenticate_admin():
         with open("config.yaml", "r") as f:
             st.session_state.config = yaml.load(f, Loader=SafeLoader)
 
-    st.session_state.authenticator = stauth.Authenticate(
-        st.session_state.config['credentials'],
-        st.session_state.config['cookie']['name'],
-        st.session_state.config['cookie']['key'],
-        st.session_state.config['cookie']['expiry_days'],
-    )
+    if "authenticator" not in st.session_state:
+        st.session_state.authenticator = stauth.Authenticate(
+            st.session_state.config['credentials'],
+            st.session_state.config['cookie']['name'],
+            st.session_state.config['cookie']['key'],
+            st.session_state.config['cookie']['expiry_days'],
+        )
     
     name, authentication_status, username = st.session_state.authenticator.login()
 
