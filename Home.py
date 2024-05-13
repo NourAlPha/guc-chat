@@ -16,9 +16,11 @@ st.markdown("""
             A conversational AI bot that can help you with any questions you may have.
             """)
 # Displaying a markdown section with instructions on what users can do
+# add five sub titles to each title
 st.markdown("""
             ### 🛠 What You Can Do:
-            - Go To `Chat` page to chat with bot
-            - Go To `Experts` page to add content to bot manually
-            - Go To `Upload PDF` page to upload a PDF file to bot database
+            - Go To `Chat` page to chat with me
+                - Ask me any question generally you have in mind
+                - You can also ask me specific questions about the GUC
+                - I will try to help you with the answer
             """)
