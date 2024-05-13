@@ -22,7 +22,6 @@ def get_pdf_to_text(pdf_docs_path):
     for pdf in pdf_docs:
         if(pdf.split("/")[1] in excluded_files):
             continue
-        print(pdf)
         # Create a PdfReader object for the current PDF document
         pdf_reader = PdfReader(pdf)
         # Iterate through each page in the PDF document
@@ -46,7 +45,6 @@ def get_text_files(text_files_path):
     for file in text_files:
         if(file.split("/")[1] in excluded_files):
             continue
-        print(file)
         # Open the current text file and read its contents
         with open(file, "r") as f:
             text += f.read()
@@ -103,9 +101,6 @@ def user_input(user_question):
             "chat_history": st.session_state.messages
         },
         return_only_outputs=True)
-
-    # Print the response to the console
-    print(response["output_text"])
     
     # return response
     return response
