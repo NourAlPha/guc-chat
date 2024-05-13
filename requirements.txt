@@ -5,3 +5,5 @@ langchain-google-genai
 google-generativeai
 streamlit
 faiss-cpu
+streamlit_extras
+streamlit_pdf_viewer
