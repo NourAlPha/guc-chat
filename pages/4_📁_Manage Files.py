@@ -11,7 +11,8 @@ def main():
                     page_icon="📁")
     
     # Authenticate admin
-    if not authenticate_admin():
+    authenticate_admin()
+    if "authentication_status" not in st.session_state or not st.session_state.authentication_status:
         return
 
     # Initialize session state with needed variables
