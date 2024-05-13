@@ -7,3 +7,4 @@ streamlit
 faiss-cpu
 streamlit_extras
 streamlit_pdf_viewer
+streamlit_authenticator
