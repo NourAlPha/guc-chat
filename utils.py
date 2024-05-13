@@ -13,9 +13,16 @@ def get_pdf_to_text(pdf_docs_path):
     # Get a list of all PDF documents in the specified folder
     pdf_docs = [os.path.join(pdf_docs_path, f) for f in os.listdir(pdf_docs_path) if f.endswith(".pdf")]
     
+    # Get Excluded Files
+    with open("excluded_files.txt", "r") as f:
+        excluded_files = f.read().splitlines()
+    
     text = " "
     # Iterate through each PDF document path in the list
     for pdf in pdf_docs:
+        if(pdf.split("/")[1] in excluded_files):
+            continue
+        print(pdf)
         # Create a PdfReader object for the current PDF document
         pdf_reader = PdfReader(pdf)
         # Iterate through each page in the PDF document
@@ -30,9 +37,16 @@ def get_text_files(text_files_path):
     # Get a list of all text files in the specified folder
     text_files = [os.path.join(text_files_path, f) for f in os.listdir(text_files_path) if f.endswith(".txt")]
     
+    # Get Excluded Files
+    with open("excluded_files.txt", "r") as f:
+        excluded_files = f.read().splitlines()
+    
     text = " "
     # Iterate through each text file path in the list
     for file in text_files:
+        if(file.split("/")[1] in excluded_files):
+            continue
+        print(file)
         # Open the current text file and read its contents
         with open(file, "r") as f:
             text += f.read()
