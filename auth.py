@@ -5,10 +5,7 @@ import streamlit as st
 
 def authenticate_admin():
     
-    if "authentication_status" not in st.session_state:
-        st.session_state.authentication_status = False
-    
-    if st.session_state.authentication_status:
+    if "authentication_status" in st.session_state and st.session_state.authentication_status:
         st.session_state.authenticator.logout('Logout', 'sidebar')
         return
     
