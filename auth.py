@@ -79,17 +79,17 @@ def authenticate_admin():
     with open("config.yaml", "r") as f:
         config = yaml.load(f, Loader=SafeLoader)
 
-    authenticator = stauth.Authenticate(
+    st.session_state.authenticator = stauth.Authenticate(
         config['credentials'],
         config['cookie']['name'],
         config['cookie']['key'],
         config['cookie']['expiry_days'],
     )
     
-    name, authentication_status, username = login(authenticator=authenticator)
+    name, authentication_status, username = login(authenticator=st.session_state.authenticator)
     
     if authentication_status:
-        authenticator.logout('Logout', 'sidebar')
+        st.session_state.authenticator.logout('Logout', 'sidebar')
     elif authentication_status == False:
         st.error('Username/password is incorrect')
     elif authentication_status == None:

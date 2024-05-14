@@ -12,6 +12,8 @@ def main():
     # Authenticate admin
     if "authentication_status" not in st.session_state or not st.session_state.authentication_status:
         authenticate_admin()
+    else:
+        st.session_state.authenticator.logout('Logout', 'sidebar')
     if not st.session_state.authentication_status:
         return
 
