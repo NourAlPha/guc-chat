@@ -11,7 +11,7 @@ def main():
     
     # Authenticate admin
     authenticate_admin()
-    if "authentication_status" not in st.session_state or not st.session_state.authentication_status:
+    if not st.session_state.authentication_status:
         return
 
     # Initialize session state with needed variables
@@ -75,8 +75,9 @@ def main():
             return
         with open(f"text_files/{file.name}", "w") as f:
             f.write(file.getvalue().decode("utf-8"))
-
-    if st.button("Save to Database", on_click=process_files):
+    
+    disable_button = uploaded_file == []
+    if st.button("Save to Database", on_click=process_files, disabled=disable_button):
         st.success("PDF file(s) uploaded successfully! 📄🚀")
 
 if __name__ == "__main__":
