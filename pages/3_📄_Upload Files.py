@@ -62,7 +62,7 @@ def main():
             return
         with open(f"temp_files/{file.name}", "wb") as f:
             f.write(file.getbuffer())
-        text = textract.process(f"doc_files/{file.name}")
+        text = textract.process(f"temp_files/{file.name}")
         file_name = file.name.split(".")[0]
         with open(f"text_files/{file_name}.txt", "w") as f:
             f.write(text.decode("utf-8"))
@@ -73,7 +73,7 @@ def main():
             return
         with open(f"temp_files/{file.name}", "wb") as f:
             f.write(file.getbuffer())
-        text = textract.process(f"excel_files/{file.name}")
+        text = textract.process(f"temp_files/{file.name}")
         file_name = file.name.split(".")[0]
         with open(f"text_files/{file_name}.txt", "w") as f:
             f.write(text.decode("utf-8"))
