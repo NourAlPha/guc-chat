@@ -60,6 +60,8 @@ def main():
     def process_doc_files(file):
         if not uploaded_file:
             return
+        if not os.path.exists("temp_files"):
+            os.makedirs("temp_files")
         with open(f"temp_files/{file.name}", "wb") as f:
             f.write(file.getbuffer())
         text = textract.process(f"temp_files/{file.name}")
@@ -71,6 +73,8 @@ def main():
     def process_excel_files(file):
         if not uploaded_file:
             return
+        if not os.path.exists("temp_files"):
+            os.makedirs("temp_files")
         with open(f"temp_files/{file.name}", "wb") as f:
             f.write(file.getbuffer())
         text = textract.process(f"temp_files/{file.name}")
