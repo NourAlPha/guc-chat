@@ -3,7 +3,6 @@ libxslt1-dev
 antiword
 unrtf
 poppler-utils
-pstotext
 tesseract-ocr
 flac
 ffmpeg
