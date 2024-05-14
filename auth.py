@@ -68,6 +68,7 @@ def login(authenticator, location: str='main', max_concurrent_users: Optional[in
                                                                      max_login_attempts):
                         authenticator.authentication_handler.execute_login(username=username)
                         authenticator.cookie_handler.set_cookie()
+                        time.sleep(0.7)
                         st.rerun()
         return (st.session_state['name'], st.session_state['authentication_status'],
                 st.session_state['username'])
