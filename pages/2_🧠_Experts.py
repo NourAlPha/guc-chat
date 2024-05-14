@@ -9,7 +9,8 @@ def main():
                     page_icon="🧠")
     
     # Authenticate admin
-    authenticate_admin()
+    if "authentication_status" not in st.session_state or not st.session_state.authentication_status:
+        authenticate_admin()
     if not st.session_state.authentication_status:
         return
     
