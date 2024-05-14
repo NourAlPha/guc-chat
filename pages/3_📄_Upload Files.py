@@ -40,12 +40,12 @@ def main():
         for file in uploaded_file:
             if file.type == "application/pdf":
                 process_pdf_files(file)
-            elif file.type == "application/msword":
-                process_doc_files(file)
+            elif file.type == "application/msword" or file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
+                process_textract_files(file)
             elif file.type == "text/plain":
                 process_text_files(file)
-            elif file.type == "application/vnd.ms-excel":
-                process_excel_files(file)
+            elif file.type == "application/vnd.ms-excel" or file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+                process_textract_files(file)
             else:
                 st.warning(f"Unsupported file type: {file.type}")
         process_vector_space()
@@ -57,7 +57,7 @@ def main():
         with open(f"pdf_files/{file.name}", "wb") as f:
             f.write(file.getbuffer())
     
-    def process_doc_files(file):
+    def process_textract_files(file):
         if not uploaded_file:
             return
         if not os.path.exists("temp_files"):
@@ -68,20 +68,7 @@ def main():
         file_name = file.name.split(".")[0]
         with open(f"text_files/{file_name}.txt", "w") as f:
             f.write(text.decode("utf-8"))
-        os.remove(f"temp_files/{file.name}")
-    
-    def process_excel_files(file):
-        if not uploaded_file:
-            return
-        if not os.path.exists("temp_files"):
-            os.makedirs("temp_files")
-        with open(f"temp_files/{file.name}", "wb") as f:
-            f.write(file.getbuffer())
-        text = textract.process(f"temp_files/{file.name}")
-        file_name = file.name.split(".")[0]
-        with open(f"text_files/{file_name}.txt", "w") as f:
-            f.write(text.decode("utf-8"))
-        os.remove(f"temp_files/{file.name}")        
+        os.remove(f"temp_files/{file.name}")      
     
     def process_text_files(file):
         if not uploaded_file:
