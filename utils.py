@@ -92,19 +92,23 @@ def get_conversational_chain_docs():
 def user_input(user_question):
     # Perform similarity search in the vector database based on the user question
     docs = st.session_state.new_db.similarity_search(user_question)
+    try:
+        # Use the conversational chain to get a response based on the user question and retrieved documents
+        response = st.session_state.chain(
+            {
+                "input_documents": docs,
+                "question": user_question,
+                "chat_history": st.session_state.messages
+            },
+            return_only_outputs=True)
 
-    # Use the conversational chain to get a response based on the user question and retrieved documents
-    response = st.session_state.chain(
-        {
-            "input_documents": docs,
-            "question": user_question,
-            "chat_history": st.session_state.messages
-        },
-        return_only_outputs=True)
-
-    # Print the response to the console
-    print(response["output_text"])
-    
+        # Print the response to the console
+        print(response["output_text"])
+    except Exception as e:
+        try:
+            response = st.session_state.model.invoke(user_input)
+        except Exception as e:
+            response = "I'm sorry, I don't have an answer to that question."
     # return response
     return response
     
