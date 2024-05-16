@@ -107,9 +107,6 @@ def user_input(user_question):
         except Exception as e:
             response = "I'm sorry, I don't have an answer to that question."
             
-    # Print the response to the console
-    print(response)
-    
     # return response
     return response
     
