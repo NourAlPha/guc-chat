@@ -54,46 +54,86 @@ def main():
                 f.write(file + "\n")
         process_vector_space()
         st.success("File included successfully! ✅🚀")
+        
+    def save_changes(update_text):
+        with open(f"text_files/{file_list}", "w") as f:
+            f.write(update_text)
+        process_vector_space()
+        st.success("Changes saved successfully! 📝🚀")
 
     # Display the content of the selected file
     if file_list:
-        col0, col1, col2 = st.columns([3, 4, 5])
-        with col1:
-            with stylable_container(
-                "red",
-                css_styles="""
-                button {
-                    background-color: #FF8F95;
-                    color: black;
-                }""",
-            ):
-                st.button("Delete File", on_click=delete_file)
-        with col2:
-            with stylable_container(
-                "blue",
-                css_styles="""
-                button {
-                    background-color: #BFDBF7;
-                    color: black;
-                }""",
-            ):
-                with open("excluded_files.txt", "r") as f:
-                    excluded_files = f.read().splitlines()
-                is_excluded = True if file_list in excluded_files else False
-                if is_excluded:
-                    st.button("Include File", on_click=include_file)
-                else:
-                    st.button("Exclude File", on_click=exclude_file)
         if file_list in os.listdir("pdf_files"):
-            st.markdown(f"### {file_list}")
-            st.markdown(f"#### Content:")
+            col0, col1, col2 = st.columns([3, 4, 5])
+            with col1:
+                with stylable_container(
+                    "red",
+                    css_styles="""
+                    button {
+                        background-color: #FF8F95;
+                        color: black;
+                    }""",
+                ):
+                    st.button("Delete File", on_click=delete_file)
+            with col2:
+                with stylable_container(
+                    "blue",
+                    css_styles="""
+                    button {
+                        background-color: #BFDBF7;
+                        color: black;
+                    }""",
+                ):
+                    with open("excluded_files.txt", "r") as f:
+                        excluded_files = f.read().splitlines()
+                    is_excluded = True if file_list in excluded_files else False
+                    if is_excluded:
+                        st.button("Include File", on_click=include_file)
+                    else:
+                        st.button("Exclude File", on_click=exclude_file)
             pdf_viewer(f"pdf_files/{file_list}")
         else:
             with open(f"text_files/{file_list}", "r") as f:
                 text = f.read()
-            st.markdown(f"### {file_list}")
-            st.markdown(f"#### Content:")
-            st.write(text)
+            update_text = st.text_area("File content: ", text, height=300)
+            col0, col1, col2, col3 = st.columns([2, 5, 5, 6])
+            with col1:
+                with stylable_container(
+                    "red",
+                    css_styles="""
+                    button {
+                        background-color: #FF8F95;
+                        color: black;
+                    }""",
+                ):
+                    st.button("Delete File", on_click=delete_file)
+            with col2:
+                with stylable_container(
+                    "blue",
+                    css_styles="""
+                    button {
+                        background-color: #BFDBF7;
+                        color: black;
+                    }""",
+                ):
+                    with open("excluded_files.txt", "r") as f:
+                        excluded_files = f.read().splitlines()
+                    is_excluded = True if file_list in excluded_files else False
+                    if is_excluded:
+                        st.button("Include File", on_click=include_file)
+                    else:
+                        st.button("Exclude File", on_click=exclude_file)
+            with col3:
+                with stylable_container(
+                    "green",
+                    css_styles="""
+                    button {
+                        background-color: #C3E88D;
+                        color: black;
+                    }""",
+                ):
+                    st.button("Save Changes", on_click=save_changes, args=(update_text,))
             
+        
 if __name__ == "__main__":
     main()
