@@ -103,7 +103,7 @@ def user_input(user_question):
             return_only_outputs=True)["output_text"]
     except Exception as e:
         try:
-            response = st.session_state.model.invoke(user_question)
+            response = st.session_state.model.invoke(user_question).content
         except Exception as e:
             response = "I'm sorry, I don't have an answer to that question."
             
