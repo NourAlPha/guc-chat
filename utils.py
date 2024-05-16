@@ -100,23 +100,23 @@ def user_input(user_question):
                 "question": user_question,
                 "chat_history": st.session_state.messages
             },
-            return_only_outputs=True)
-
-        # Print the response to the console
-        print(response["output_text"])
+            return_only_outputs=True)["output_text"]
     except Exception as e:
         try:
             response = st.session_state.model.invoke(user_input)
         except Exception as e:
             response = "I'm sorry, I don't have an answer to that question."
+            
+    # Print the response to the console
+    print(response)
+    
     # return response
     return response
     
 # Function to generate output based on a query
 def make_output(query):
     # Query the QA chain and extract the result
-    answer = user_input(query)
-    result = answer["output_text"]
+    result = user_input(query)
     return result
 
 # Function to modify the output by adding spaces between each word with a delay
