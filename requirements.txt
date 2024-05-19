@@ -9,3 +9,4 @@ streamlit_extras==0.4.2
 streamlit_pdf_viewer==0.0.11
 streamlit_authenticator==0.3.2
 textract==1.6.5
+pypdf==4.2.0
