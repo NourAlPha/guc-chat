@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import initialize_session_state, process_vector_space
+from utils import initialize_session_state, process_vector_space_level1, summarizeDocAndSave
 import os
 from streamlit_pdf_viewer import pdf_viewer
 from streamlit_extras.stylable_container import stylable_container
@@ -34,31 +34,36 @@ def main():
     def delete_file():
         if file_list in os.listdir("pdf_files"):
             os.remove(f"pdf_files/{file_list}")
+            os.remove(f"summarized_files/{file_list.split('.')[0] + '_pdf'}.txt")
+            os.rmdir(f"faiss_index/{file_list.split('.')[0] + '_pdf'}")
         else:
             os.remove(f"text_files/{file_list}")
-        process_vector_space()
+            os.remove(f"summarized_files/{file_list.split('.')[0] + '_txt'}.txt")
+            os.rmdir(f"faiss_index/{file_list.split('.')[0] + '_txt'}")
+        process_vector_space_level1()
         st.success("File deleted successfully! 🚫🚀")
 
     def exclude_file():
         with open("excluded_files.txt", "a") as f:
-            f.write(file_list + "\n")
-        process_vector_space()
+            f.write(file_list.split(".")[0] + ("_pdf.txt" if file_list[-4:] == ".pdf" else "_txt.txt") + "\n")
+        process_vector_space_level1()
         st.success("File excluded successfully! ❌🚀")
         
     def include_file():
         with open("excluded_files.txt", "r") as f:
             excluded_files = f.read().splitlines()
-        excluded_files.remove(file_list)
+        excluded_files.remove(file_list.split(".")[0] + ("_pdf.txt" if file_list[-4:] == ".pdf" else "_txt.txt"))
         with open("excluded_files.txt", "w") as f:
             for file in excluded_files:
                 f.write(file + "\n")
-        process_vector_space()
+        process_vector_space_level1()
         st.success("File included successfully! ✅🚀")
         
     def save_changes(update_text):
         with open(f"text_files/{file_list}", "w") as f:
             f.write(update_text)
-        process_vector_space()
+        summarizeDocAndSave(file_list)
+        process_vector_space_level1()
         st.success("Changes saved successfully! 📝🚀")
 
     # Display the content of the selected file

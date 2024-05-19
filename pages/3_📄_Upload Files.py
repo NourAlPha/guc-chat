@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import initialize_session_state, process_vector_space
+from utils import initialize_session_state, process_vector_space_level1, summarizeDocAndSave
 from auth import authenticate_admin
 import textract
 import os
@@ -51,7 +51,8 @@ def main():
                 process_textract_files(file)
             else:
                 st.warning(f"Unsupported file type: {file.type}")
-        process_vector_space()
+            summarizeDocAndSave(file.name)
+        process_vector_space_level1()
         st.session_state.uploader_key += 1
     
     def process_pdf_files(file):

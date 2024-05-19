@@ -1,5 +1,5 @@
 import streamlit as st
-from utils import process_vector_space, initialize_session_state
+from utils import process_vector_space_level1, initialize_session_state, summarizeDocAndSave
 import os
 from auth import authenticate_admin
 
@@ -46,7 +46,8 @@ def main():
             return
         with open(f"text_files/{file_name}.txt", "a") as f:
             f.write("\n\n\n" + raw_text + "\n\n\n")
-        process_vector_space()
+        summarizeDocAndSave(file_name + ".txt")
+        process_vector_space_level1()
         st.session_state.text_area_key += 1
         st.session_state.text_box_key += 1
         st.success("Content added successfully! 🚀🧠")
