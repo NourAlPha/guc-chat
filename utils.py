@@ -112,7 +112,6 @@ def summarizeDocAndSave(file_name):
     stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text")
     
     summary = stuff_chain.invoke(docs)
-    print(summary)
     
     with open(f"summarized_files/{file_name.split('.')[0] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt", "w") as f:
         f.write(summary["output_text"])
