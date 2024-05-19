@@ -149,15 +149,13 @@ def get_conversational_chain_docs():
 def user_input(user_question):
     
     db = st.session_state.db
-    result_doc = db.similarity_search(user_question, k=4)
+    result_doc = db.similarity_search(user_question)
     docs_to_search = [doc.metadata["source"] for doc in result_doc]
     all_result = []
     for file in docs_to_search:
         cur_db = FAISS.load_local(f"./faiss_index/{file.split('.')[0]}", st.session_state.embeddings, allow_dangerous_deserialization=True)
-        all_result.extend(cur_db.similarity_search_with_score(user_question, k=4))
-    all_result.sort(key=lambda x: x[1])
-    all_result = all_result[:4]
-    docs = [result[0] for result in all_result]    
+        all_result.extend(cur_db.similarity_search(user_question))
+    docs = all_result
     
     try:
         # Use the conversational chain to get a response based on the user question and retrieved documents
