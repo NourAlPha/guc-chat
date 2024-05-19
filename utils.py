@@ -201,6 +201,12 @@ def initialize_session_state():
         st.session_state.chain = get_conversational_chain_docs()
         st.session_state.db = FAISS.load_local("./faiss_index/summarized_files", st.session_state.embeddings, allow_dangerous_deserialization=True)
         genai.configure(api_key=os.getenv("GOOGLE_API_KEY")) # Loads API key
+        if not os.path.exists("pdf_files"):
+            os.makedirs("pdf_files")
+        if not os.path.exists("text_files"):
+            os.makedirs("text_files")
+        if not os.path.exists("summarized_files"):
+            os.makedirs("summarized_files")
 
 def process_vector_space_level1():
     st.session_state.db = get_summarized_list()
