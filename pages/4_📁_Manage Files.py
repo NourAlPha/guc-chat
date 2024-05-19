@@ -33,13 +33,19 @@ def main():
 
     def delete_file():
         if file_list in os.listdir("pdf_files"):
-            os.remove(f"pdf_files/{file_list}")
-            os.remove(f"summarized_files/{file_list.split('.')[0] + '_pdf'}.txt")
-            os.rmdir(f"faiss_index/{file_list.split('.')[0] + '_pdf'}")
+            if os.path.exists(f"pdf_files/{file_list}"):
+                os.remove(f"pdf_files/{file_list}")
+            if os.path.exists(f"text_files/{file_list.split('.')[0] + '_txt'}.txt"):
+                os.remove(f"summarized_files/{file_list.split('.')[0] + '_pdf'}.txt")
+            if os.path.exists(f"faiss_index/{file_list.split('.')[0] + '_pdf'}"):
+                os.rmdir(f"faiss_index/{file_list.split('.')[0] + '_pdf'}")
         else:
-            os.remove(f"text_files/{file_list}")
-            os.remove(f"summarized_files/{file_list.split('.')[0] + '_txt'}.txt")
-            os.rmdir(f"faiss_index/{file_list.split('.')[0] + '_txt'}")
+            if os.path.exists(f"text_files/{file_list}"):
+                os.remove(f"text_files/{file_list}")
+            if os.path.exists(f"summarized_files/{file_list.split('.')[0] + '_txt'}.txt"):
+                os.remove(f"summarized_files/{file_list.split('.')[0] + '_txt'}.txt")
+            if os.path.exists(f"faiss_index/{file_list.split('.')[0] + '_txt'}"):
+                os.rmdir(f"faiss_index/{file_list.split('.')[0] + '_txt'}")
         process_vector_space_level1()
         st.success("File deleted successfully! 🚫🚀")
 

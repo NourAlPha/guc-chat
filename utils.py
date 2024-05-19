@@ -81,7 +81,14 @@ def get_chunks(text):
 def get_summarized_list():
     files = os.listdir("summarized_files")
     docs = []
+    
+    excluded_files = []
+    with open("excluded_files.txt", "r") as f:
+        excluded_files = f.read().splitlines()
+    
     for file in files:
+        if (file[:-4] + (".pdf" if file[-4:] == "_pdf" else ".txt")) in excluded_files:
+            continue
         with open(f"summarized_files/{file}", "r") as f:
             docs.append(Document(page_content=f.read(), metadata={"source": file}))
 
