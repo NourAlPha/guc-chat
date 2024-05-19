@@ -1,0 +1,5 @@
+*.faiss
+*.pyc
+*.pkl
+*.pdf
+*.txt
