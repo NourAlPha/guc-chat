@@ -97,7 +97,7 @@ def main():
                 ):
                     with open("excluded_files.txt", "r") as f:
                         excluded_files = f.read().splitlines()
-                    is_excluded = True if file_list in excluded_files else False
+                    is_excluded = True if (file_list.split(".")[0] + "_pdf.txt") in excluded_files else False
                     if is_excluded:
                         st.button("Include File", on_click=include_file)
                     else:
@@ -129,7 +129,7 @@ def main():
                 ):
                     with open("excluded_files.txt", "r") as f:
                         excluded_files = f.read().splitlines()
-                    is_excluded = True if file_list in excluded_files else False
+                    is_excluded = True if (file_list.split(".")[0] + "_txt.txt") in excluded_files else False
                     if is_excluded:
                         st.button("Include File", on_click=include_file)
                     else:
