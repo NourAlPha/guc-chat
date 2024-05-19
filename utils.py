@@ -109,6 +109,7 @@ def summarizeDocAndSave(file_name):
     
     with open(f"summarized_files/{file_name.split('.')[0] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt", "w") as f:
         f.write(summary["output_text"])
+    process_vector_space_level2(file_name)
     
 
 def add_vector_store(text_chunks, filename):
@@ -146,7 +147,7 @@ def user_input(user_question):
     docs_to_search = [doc.metadata["source"] for doc in result_doc]
     all_result = []
     for file in docs_to_search:
-        cur_db = FAISS.load_local(f"./faiss_index/{file.split('.')[0] + ('_pdf' if file[-4:] == '.pdf' else '_txt')}", st.session_state.embeddings, allow_dangerous_deserialization=True)
+        cur_db = FAISS.load_local(f"./faiss_index/{file.split('.')[0]}", st.session_state.embeddings, allow_dangerous_deserialization=True)
         all_result.extend(cur_db.similarity_search_with_score(user_question, k=4))
     all_result.sort(key=lambda x: x[1])
     all_result = all_result[:4]
