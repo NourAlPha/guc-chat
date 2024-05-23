@@ -12,6 +12,7 @@ from langchain_community.document_loaders import PyPDFLoader, TextLoader
 import time
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 import google.generativeai as genai
+from google.generativeai.types.safety_types import HarmBlockThreshold, HarmCategory
 
 def get_pdf_to_text(pdf_docs_path):
     # Get a list of all PDF documents in the specified folder
@@ -74,27 +75,9 @@ def get_text_file(text_file_path):
 
 # The RecursiveCharacterTextSplitter takes a large text and splits it based on a specified chunk size.
 def get_chunks(text):
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=10000, chunk_overlap=1000)
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=2000, chunk_overlap=200)
     chunks = text_splitter.split_text(text)
     return chunks
-
-def get_summarized_list():
-    files = os.listdir("summarized_files")
-    docs = []
-    
-    excluded_files = []
-    with open("excluded_files.txt", "r") as f:
-        excluded_files = f.read().splitlines()
-    
-    for file in files:
-        if (file[:-4] + (".pdf" if file[-4:] == "_pdf" else ".txt")) in excluded_files:
-            continue
-        with open(f"summarized_files/{file}", "r") as f:
-            docs.append(Document(page_content=f.read(), metadata={"source": file}))
-
-    db = FAISS.from_documents(docs, st.session_state.embeddings)
-    db.save_local("./faiss_index/summarized_files")
-    return db
 
 def summarizeDocAndSave(file_name):
     if file_name[-4:] == ".pdf":
@@ -114,7 +97,8 @@ def summarizeDocAndSave(file_name):
     summary = stuff_chain.invoke(docs)
     
     with open(f"summarized_files/{file_name.split('.')[0] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt", "w") as f:
-        f.write(summary["output_text"])
+        f.write(f"DOCUMENT NAME: {file_name.split('.')[0] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt\n\n"
+                + summary["output_text"])
     process_vector_space_level2(file_name)
     
 
@@ -125,7 +109,7 @@ def add_vector_store(text_chunks, filename):
     # Save the vector store locally with the name "faiss_index"
     vector_store.save_local(f"./faiss_index/{filename.split('.')[0] + ('_pdf' if filename[-4:] == '.pdf' else '_txt')}")
 
-def get_conversational_chain_docs():
+def process_conversational_chain_docs():
     # Define a prompt template for asking questions based on a given context
     prompt_template = """    
     Given the chat history as an array of pair, the first element being the role and the second element being the content.
@@ -142,20 +126,47 @@ def get_conversational_chain_docs():
     )
 
     # Load a question-answering chain with the specified model and prompt
-    chain = load_qa_chain(llm=st.session_state.model, chain_type="stuff", prompt=prompt)
+    st.session_state.chain = load_qa_chain(llm=st.session_state.model, chain_type="stuff", prompt=prompt)
 
-    return chain
+def process_relevant_docs():
+    prompt = PromptTemplate(
+        template="""
+            Given a set of textfiles and a query, you are asked to find the most relevant documents to the given query.
+            Return only the names of the most relevant documents as a python list.\n\n
+            
+            textfiles: {context}\n\n
+            query: {question}
+            
+            relevant documents list: 
+        """,
+        input_variables=["question", "textfiles"]
+    )
+    
+    st.session_state.chain2 = load_qa_chain(llm=st.session_state.model2, chain_type="stuff", prompt=prompt)
 
 def user_input(user_question):
     
-    db = st.session_state.db
-    result_doc = db.similarity_search(user_question)
-    docs_to_search = [doc.metadata["source"] for doc in result_doc]
-    all_result = []
+    docs_to_search_str = st.session_state.chain2({
+        "input_documents": st.session_state.docs,
+        "question": user_question
+    })["output_text"]
+    
+    print(docs_to_search_str)
+    
+    try:
+        docs_to_search = eval(docs_to_search_str)
+    except Exception as e:
+        docs_to_search = []
+        for i in range(len(docs_to_search_str)):
+            for j in range(i, len(docs_to_search_str)):
+                if docs_to_search_str[i:j+1] in os.listdir("summarized_files"):
+                    docs_to_search.append(docs_to_search_str[i:j+1])
+    
+    print(docs_to_search)
+    docs = []
     for file in docs_to_search:
-        cur_db = FAISS.load_local(f"./faiss_index/{file.split('.')[0]}", st.session_state.embeddings, allow_dangerous_deserialization=True)
-        all_result.extend(cur_db.similarity_search(user_question))
-    docs = all_result
+        cur_db = FAISS.load_local(f"./faiss_index/{file.split('.')[0]}", st.session_state.embeddings)
+        docs.extend(cur_db.similarity_search(user_question))
     
     try:
         # Use the conversational chain to get a response based on the user question and retrieved documents
@@ -194,10 +205,20 @@ def initialize_session_state():
     # Initialize session state with needed variables
     if "messages" not in st.session_state:
         st.session_state.messages = []
-        st.session_state.model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0.5)
+        safety_settings = {
+            HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+            HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+        }
+        st.session_state.model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0.5, safety_settings=safety_settings)
+        st.session_state.model2 = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0, safety_settings=safety_settings)
         st.session_state.embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-        st.session_state.chain = get_conversational_chain_docs()
-        st.session_state.db = FAISS.load_local("./faiss_index/summarized_files", st.session_state.embeddings, allow_dangerous_deserialization=True)
+        process_conversational_chain_docs()
+        process_relevant_docs()
+        process_vector_space_level1()
+        
         genai.configure(api_key=os.getenv("GOOGLE_API_KEY")) # Loads API key
         if not os.path.exists("pdf_files"):
             os.makedirs("pdf_files")
@@ -207,7 +228,11 @@ def initialize_session_state():
             os.makedirs("summarized_files")
 
 def process_vector_space_level1():
-    st.session_state.db = get_summarized_list()
+    st.session_state.docs = []
+    for file in os.listdir("summarized_files"):
+        loader = TextLoader(f"summarized_files/{file}")
+        docs = loader.load_and_split()
+        st.session_state.docs.extend(docs)
     
 def process_vector_space_level2(filename):
     if filename[-4:] == ".pdf":
