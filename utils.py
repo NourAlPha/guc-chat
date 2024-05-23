@@ -14,29 +14,6 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGener
 import google.generativeai as genai
 from google.generativeai.types.safety_types import HarmBlockThreshold, HarmCategory
 
-def get_pdf_to_text(pdf_docs_path):
-    # Get a list of all PDF documents in the specified folder
-    pdf_docs = [os.path.join(pdf_docs_path, f) for f in os.listdir(pdf_docs_path) if f.endswith(".pdf")]
-    
-    # Get Excluded Files
-    with open("excluded_files.txt", "r") as f:
-        excluded_files = f.read().splitlines()
-    
-    text = " "
-    # Iterate through each PDF document path in the list
-    for pdf in pdf_docs:
-        if(pdf.split("/")[1] in excluded_files):
-            continue
-        # Create a PdfReader object for the current PDF document
-        pdf_reader = PdfReader(pdf)
-        # Iterate through each page in the PDF document
-        for page in pdf_reader.pages:
-            # Extract text from the current page and append it to the 'text' string
-            text += page.extract_text()
-
-    # Return the concatenated text from all PDF documents
-    return text
-
 def get_pdf_file(pdf_file_path):
     # Create a PdfReader object for the specified PDF file
     pdf_reader = PdfReader(pdf_file_path)
@@ -45,26 +22,6 @@ def get_pdf_file(pdf_file_path):
     for page in pdf_reader.pages:
         # Extract text from the current page and append it to the 'text' string
         text += page.extract_text()
-    return text
-
-def get_text_files(text_files_path):
-    # Get a list of all text files in the specified folder
-    text_files = [os.path.join(text_files_path, f) for f in os.listdir(text_files_path) if f.endswith(".txt")]
-    
-    # Get Excluded Files
-    with open("excluded_files.txt", "r") as f:
-        excluded_files = f.read().splitlines()
-    
-    text = " "
-    # Iterate through each text file path in the list
-    for file in text_files:
-        if(file.split("/")[1] in excluded_files):
-            continue
-        # Open the current text file and read its contents
-        with open(file, "r") as f:
-            text += f.read()
-
-    # Return the concatenated text from all text files
     return text
 
 def get_text_file(text_file_path):
@@ -204,6 +161,12 @@ def modify_output(input):
 def initialize_session_state():
     # Initialize session state with needed variables
     if "messages" not in st.session_state:
+        if not os.path.exists("pdf_files"):
+            os.makedirs("pdf_files")
+        if not os.path.exists("text_files"):
+            os.makedirs("text_files")
+        if not os.path.exists("summarized_files"):
+            os.makedirs("summarized_files")
         st.session_state.messages = []
         safety_settings = {
             HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
@@ -218,18 +181,16 @@ def initialize_session_state():
         process_conversational_chain_docs()
         process_relevant_docs()
         process_vector_space_level1()
-        
         genai.configure(api_key=os.getenv("GOOGLE_API_KEY")) # Loads API key
-        if not os.path.exists("pdf_files"):
-            os.makedirs("pdf_files")
-        if not os.path.exists("text_files"):
-            os.makedirs("text_files")
-        if not os.path.exists("summarized_files"):
-            os.makedirs("summarized_files")
 
 def process_vector_space_level1():
     st.session_state.docs = []
+    excluded_files = []
+    with open("excluded_files.txt", "r") as f:
+        excluded_files = f.read().splitlines()
     for file in os.listdir("summarized_files"):
+        if file in excluded_files:
+            continue
         loader = TextLoader(f"summarized_files/{file}")
         docs = loader.load_and_split()
         st.session_state.docs.extend(docs)

@@ -64,7 +64,6 @@ def main():
                 f.write(file + "\n")
         process_vector_space_level1()
         st.success("File included successfully! ✅🚀")
-        
     def save_changes(update_text):
         with open(f"text_files/{file_list}", "w") as f:
             f.write(update_text)
