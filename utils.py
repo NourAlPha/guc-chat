@@ -149,10 +149,7 @@ def user_input(user_question):
     docs_to_search_str = st.session_state.chain2({
         "input_documents": st.session_state.docs,
         "question": user_question
-    })["output_text"]
-    
-    print(docs_to_search_str)
-    
+    })["output_text"]    
     try:
         docs_to_search = eval(docs_to_search_str)
     except Exception as e:
@@ -162,7 +159,6 @@ def user_input(user_question):
                 if docs_to_search_str[i:j+1] in os.listdir("summarized_files"):
                     docs_to_search.append(docs_to_search_str[i:j+1])
     
-    print(docs_to_search)
     docs = []
     for file in docs_to_search:
         cur_db = FAISS.load_local(f"./faiss_index/{file.split('.')[0]}", st.session_state.embeddings)
