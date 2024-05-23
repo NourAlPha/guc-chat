@@ -122,7 +122,7 @@ def user_input(user_question):
     print(docs_to_search)
     docs = []
     for file in docs_to_search:
-        cur_db = FAISS.load_local(f"./faiss_index/{file.split('.')[0]}", st.session_state.embeddings)
+        cur_db = FAISS.load_local(f"./faiss_index/{file.split('.')[0]}", st.session_state.embeddings, allow_dangerous_deserialization=True)
         docs.extend(cur_db.similarity_search(user_question))
     
     try:
