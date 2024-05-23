@@ -149,7 +149,10 @@ def user_input(user_question):
     docs_to_search_str = st.session_state.chain2({
         "input_documents": st.session_state.docs,
         "question": user_question
-    })["output_text"]    
+    })["output_text"]
+    
+    print(docs_to_search_str)
+    
     try:
         docs_to_search = eval(docs_to_search_str)
     except Exception as e:
@@ -159,6 +162,7 @@ def user_input(user_question):
                 if docs_to_search_str[i:j+1] in os.listdir("summarized_files"):
                     docs_to_search.append(docs_to_search_str[i:j+1])
     
+    print(docs_to_search)
     docs = []
     for file in docs_to_search:
         cur_db = FAISS.load_local(f"./faiss_index/{file.split('.')[0]}", st.session_state.embeddings)
@@ -209,7 +213,7 @@ def initialize_session_state():
             HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
         }
         st.session_state.model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0.5, safety_settings=safety_settings)
-        st.session_state.model2 = ChatGoogleGenerativeAI(model="gemini-pro", temperature=0, safety_settings=safety_settings)
+        st.session_state.model2 = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0, safety_settings=safety_settings)
         st.session_state.embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
         process_conversational_chain_docs()
         process_relevant_docs()
