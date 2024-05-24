@@ -35,7 +35,7 @@ def main():
         if file_list in os.listdir("pdf_files"):
             if os.path.exists(f"pdf_files/{file_list}"):
                 os.remove(f"pdf_files/{file_list}")
-            if os.path.exists(f"text_files/{file_list.split('.')[0] + '_txt'}.txt"):
+            if os.path.exists(f"summarized_files/{file_list.split('.')[0] + '_pdf'}.txt"):
                 os.remove(f"summarized_files/{file_list.split('.')[0] + '_pdf'}.txt")
             if os.path.exists(f"faiss_index/{file_list.split('.')[0] + '_pdf'}"):
                 os.remove(f"faiss_index/{file_list.split('.')[0] + '_pdf'}/index.faiss")
