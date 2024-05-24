@@ -38,6 +38,8 @@ def main():
             if os.path.exists(f"text_files/{file_list.split('.')[0] + '_txt'}.txt"):
                 os.remove(f"summarized_files/{file_list.split('.')[0] + '_pdf'}.txt")
             if os.path.exists(f"faiss_index/{file_list.split('.')[0] + '_pdf'}"):
+                os.remove(f"faiss_index/{file_list.split('.')[0] + '_pdf'}/index.faiss")
+                os.remove(f"faiss_index/{file_list.split('.')[0] + '_pdf'}/index.pkl")
                 os.rmdir(f"faiss_index/{file_list.split('.')[0] + '_pdf'}")
         else:
             if os.path.exists(f"text_files/{file_list}"):
@@ -45,6 +47,8 @@ def main():
             if os.path.exists(f"summarized_files/{file_list.split('.')[0] + '_txt'}.txt"):
                 os.remove(f"summarized_files/{file_list.split('.')[0] + '_txt'}.txt")
             if os.path.exists(f"faiss_index/{file_list.split('.')[0] + '_txt'}"):
+                os.remove(f"faiss_index/{file_list.split('.')[0] + '_txt'}/index.faiss")
+                os.remove(f"faiss_index/{file_list.split('.')[0] + '_txt'}/index.pkl")
                 os.rmdir(f"faiss_index/{file_list.split('.')[0] + '_txt'}")
         process_vector_space_level1()
         st.success("File deleted successfully! 🚫🚀")
