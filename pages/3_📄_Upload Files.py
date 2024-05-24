@@ -51,7 +51,7 @@ def main():
                 process_textract_files(file)
             else:
                 st.warning(f"Unsupported file type: {file.type}")
-            summarizeDocAndSave(file.name.split(".")[0] + (".pdf" if file.type == "application/pdf" else ".txt"))
+            summarizeDocAndSave(file.name[:-4] + (".pdf" if file.type == "application/pdf" else ".txt"))
         process_vector_space_level1()
         st.session_state.uploader_key += 1
     
@@ -69,7 +69,7 @@ def main():
         with open(f"temp_files/{file.name}", "wb") as f:
             f.write(file.getbuffer())
         text = textract.process(f"temp_files/{file.name}")
-        file_name = file.name.split(".")[0]
+        file_name = file.name[:-4]
         with open(f"text_files/{file_name}.txt", "w") as f:
             f.write(text.decode("utf-8"))
         os.remove(f"temp_files/{file.name}")      

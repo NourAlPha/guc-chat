@@ -35,34 +35,34 @@ def main():
         if file_list in os.listdir("pdf_files"):
             if os.path.exists(f"pdf_files/{file_list}"):
                 os.remove(f"pdf_files/{file_list}")
-            if os.path.exists(f"summarized_files/{file_list.split('.')[0] + '_pdf'}.txt"):
-                os.remove(f"summarized_files/{file_list.split('.')[0] + '_pdf'}.txt")
-            if os.path.exists(f"faiss_index/{file_list.split('.')[0] + '_pdf'}"):
-                os.remove(f"faiss_index/{file_list.split('.')[0] + '_pdf'}/index.faiss")
-                os.remove(f"faiss_index/{file_list.split('.')[0] + '_pdf'}/index.pkl")
-                os.rmdir(f"faiss_index/{file_list.split('.')[0] + '_pdf'}")
+            if os.path.exists(f"summarized_files/{file_list[:-4] + '_pdf'}.txt"):
+                os.remove(f"summarized_files/{file_list[:-4] + '_pdf'}.txt")
+            if os.path.exists(f"faiss_index/{file_list[:-4] + '_pdf'}"):
+                os.remove(f"faiss_index/{file_list[:-4] + '_pdf'}/index.faiss")
+                os.remove(f"faiss_index/{file_list[:-4] + '_pdf'}/index.pkl")
+                os.rmdir(f"faiss_index/{file_list[:-4] + '_pdf'}")
         else:
             if os.path.exists(f"text_files/{file_list}"):
                 os.remove(f"text_files/{file_list}")
-            if os.path.exists(f"summarized_files/{file_list.split('.')[0] + '_txt'}.txt"):
-                os.remove(f"summarized_files/{file_list.split('.')[0] + '_txt'}.txt")
-            if os.path.exists(f"faiss_index/{file_list.split('.')[0] + '_txt'}"):
-                os.remove(f"faiss_index/{file_list.split('.')[0] + '_txt'}/index.faiss")
-                os.remove(f"faiss_index/{file_list.split('.')[0] + '_txt'}/index.pkl")
-                os.rmdir(f"faiss_index/{file_list.split('.')[0] + '_txt'}")
+            if os.path.exists(f"summarized_files/{file_list[:-4] + '_txt'}.txt"):
+                os.remove(f"summarized_files/{file_list[:-4] + '_txt'}.txt")
+            if os.path.exists(f"faiss_index/{file_list[:-4] + '_txt'}"):
+                os.remove(f"faiss_index/{file_list[:-4] + '_txt'}/index.faiss")
+                os.remove(f"faiss_index/{file_list[:-4] + '_txt'}/index.pkl")
+                os.rmdir(f"faiss_index/{file_list[:-4] + '_txt'}")
         process_vector_space_level1()
         st.success("File deleted successfully! 🚫🚀")
 
     def exclude_file():
         with open("excluded_files.txt", "a") as f:
-            f.write(file_list.split(".")[0] + ("_pdf.txt" if file_list[-4:] == ".pdf" else "_txt.txt") + "\n")
+            f.write(file_list[:-4] + ("_pdf.txt" if file_list[-4:] == ".pdf" else "_txt.txt") + "\n")
         process_vector_space_level1()
         st.success("File excluded successfully! ❌🚀")
         
     def include_file():
         with open("excluded_files.txt", "r") as f:
             excluded_files = f.read().splitlines()
-        excluded_files.remove(file_list.split(".")[0] + ("_pdf.txt" if file_list[-4:] == ".pdf" else "_txt.txt"))
+        excluded_files.remove(file_list[:-4] + ("_pdf.txt" if file_list[-4:] == ".pdf" else "_txt.txt"))
         with open("excluded_files.txt", "w") as f:
             for file in excluded_files:
                 f.write(file + "\n")
@@ -100,7 +100,7 @@ def main():
                 ):
                     with open("excluded_files.txt", "r") as f:
                         excluded_files = f.read().splitlines()
-                    is_excluded = True if (file_list.split(".")[0] + "_pdf.txt") in excluded_files else False
+                    is_excluded = True if (file_list[:-4] + "_pdf.txt") in excluded_files else False
                     if is_excluded:
                         st.button("Include File", on_click=include_file)
                     else:
@@ -132,7 +132,7 @@ def main():
                 ):
                     with open("excluded_files.txt", "r") as f:
                         excluded_files = f.read().splitlines()
-                    is_excluded = True if (file_list.split(".")[0] + "_txt.txt") in excluded_files else False
+                    is_excluded = True if (file_list[:-4] + "_txt.txt") in excluded_files else False
                     if is_excluded:
                         st.button("Include File", on_click=include_file)
                     else:

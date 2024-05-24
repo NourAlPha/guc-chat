@@ -53,8 +53,8 @@ def summarizeDocAndSave(file_name):
     
     summary = stuff_chain.invoke(docs)
     
-    with open(f"summarized_files/{file_name.split('.')[0] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt", "w") as f:
-        f.write(f"DOCUMENT NAME: {file_name.split('.')[0] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt\n\n"
+    with open(f"summarized_files/{file_name[:-4] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt", "w") as f:
+        f.write(f"DOCUMENT NAME: {file_name[:-4] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt\n\n"
                 + summary["output_text"])
     process_vector_space_level2(file_name)
     
@@ -64,7 +64,7 @@ def add_vector_store(text_chunks, filename):
     vector_store = FAISS.from_texts(text_chunks, embedding=st.session_state.embeddings)
 
     # Save the vector store locally with the name "faiss_index"
-    vector_store.save_local(f"./faiss_index/{filename.split('.')[0] + ('_pdf' if filename[-4:] == '.pdf' else '_txt')}")
+    vector_store.save_local(f"./faiss_index/{filename[:-4] + ('_pdf' if filename[-4:] == '.pdf' else '_txt')}")
 
 def process_conversational_chain_docs():
     # Define a prompt template for asking questions based on a given context
@@ -122,7 +122,7 @@ def user_input(user_question):
     print(docs_to_search)
     docs = []
     for file in docs_to_search:
-        cur_db = FAISS.load_local(f"./faiss_index/{file.split('.')[0]}", st.session_state.embeddings, allow_dangerous_deserialization=True)
+        cur_db = FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings, allow_dangerous_deserialization=True)
         docs.extend(cur_db.similarity_search(user_question))
     
     try:
