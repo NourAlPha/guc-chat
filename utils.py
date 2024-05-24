@@ -88,11 +88,12 @@ def process_conversational_chain_docs():
 def process_relevant_docs():
     prompt = PromptTemplate(
         template="""
-            Given a set of textfiles and a query, you are asked to find the most relevant documents to the given query.
-            Return only the names of the most relevant documents as a python list.\n\n
+            Given a set of textfiles, chat history and a query, you are asked to find the most relevant documents
+            based on the query and the chat history. Return only the names of the most relevant documents as a python list.\n\n
             
             textfiles: {context}\n\n
-            query: {question}
+            Chat History: {chat_history}\n\n
+            query: {question}\n\n
             
             relevant documents list: 
         """,
@@ -105,11 +106,10 @@ def user_input(user_question):
     
     docs_to_search_str = st.session_state.chain2({
         "input_documents": st.session_state.docs,
-        "question": user_question
+        "question": user_question,
+        "chat_history": st.session_state.messages
     })["output_text"]
-    
-    print(docs_to_search_str)
-    
+        
     try:
         docs_to_search = eval(docs_to_search_str)
     except Exception as e:
@@ -119,7 +119,6 @@ def user_input(user_question):
                 if docs_to_search_str[i:j+1] in os.listdir("summarized_files"):
                     docs_to_search.append(docs_to_search_str[i:j+1])
     
-    print(docs_to_search)
     docs = []
     for file in docs_to_search:
         cur_db = FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings, allow_dangerous_deserialization=True)
