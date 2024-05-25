@@ -4,7 +4,6 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 import os
 from langchain_community.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
-from langchain.docstore.document import Document
 from langchain.prompts import PromptTemplate
 from langchain.chains.llm import LLMChain
 from langchain.chains.combine_documents.stuff import StuffDocumentsChain
@@ -176,7 +175,7 @@ def initialize_session_state():
         }
         st.session_state.model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0.5, safety_settings=safety_settings)
         st.session_state.model2 = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0, safety_settings=safety_settings)
-        st.session_state.embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        st.session_state.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
         process_conversational_chain_docs()
         process_relevant_docs()
         process_vector_space_level1()
