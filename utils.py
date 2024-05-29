@@ -43,14 +43,15 @@ def summarizeDocAndSave(file_name):
     docs = loader.load_and_split()
     
     prompt_template = """Write a concise summary in english of the following:
-    "{text}"
+    "{context}"
     CONCISE SUMMARY:"""
     prompt = PromptTemplate.from_template(prompt_template)
     
-    llm_chain = LLMChain(llm=st.session_state.model, prompt=prompt)
-    stuff_chain = StuffDocumentsChain(llm_chain=llm_chain, document_variable_name="text")
-    
-    summary = stuff_chain.invoke(docs)
+    stuff_chain = load_qa_chain(llm=st.session_state.model2, chain_type="stuff", prompt=prompt)
+        
+    summary = stuff_chain({
+        "input_documents": docs,
+    })
     
     with open(f"summarized_files/{file_name[:-4] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt", "w") as f:
         f.write(f"DOCUMENT NAME: {file_name[:-4] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt\n\n"
@@ -173,8 +174,8 @@ def initialize_session_state():
             HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
             HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
         }
-        st.session_state.model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0.5, safety_settings=safety_settings)
-        st.session_state.model2 = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest", temperature=0, safety_settings=safety_settings)
+        st.session_state.model = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.5, safety_settings=safety_settings)
+        st.session_state.model2 = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0, safety_settings=safety_settings)
         st.session_state.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
         process_conversational_chain_docs()
         process_relevant_docs()
