@@ -129,8 +129,6 @@ def user_input(user_question):
     if os.path.exists(f"./faiss_index/rules"):
         rules_db = FAISS.load_local(f"./faiss_index/rules", st.session_state.embeddings, allow_dangerous_deserialization=True)
         rules = rules_db.similarity_search(user_question)
-        
-    print(rules)
     
     try:
         # Use the conversational chain to get a response based on the user question and retrieved documents
@@ -232,7 +230,6 @@ def process_vector_space_level2_rules():
         chunks.append(text)
     if len(chunks) == 0:
         return
-    print(chunks)
     vector_store = FAISS.from_texts(chunks, embedding=st.session_state.embeddings)
     vector_store.save_local(f"./faiss_index/rules")
         
