@@ -58,9 +58,9 @@ def main():
         
     # Add a text area for expert to input their response
     if st.session_state.add_rules:
-        raw_text = st.text_area("Enter your response here:", key=f"text_area_{st.session_state.text_area_key}", max_chars=2000)
+        raw_text = st.text_area("Enter your response here:", key=f"text_area_{st.session_state.text_area_key}", max_chars=2000, height=300)
     else:
-        raw_text = st.text_area("Enter your response here:", key=f"text_area_{st.session_state.text_area_key}")
+        raw_text = st.text_area("Enter your response here:", key=f"text_area_{st.session_state.text_area_key}", height=300)
     # Add a button to save the expert input
     def save_response_context():
         if file_name == "":
