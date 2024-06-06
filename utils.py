@@ -70,16 +70,17 @@ def process_conversational_chain_docs():
     # Define a prompt template for asking questions based on a given context
     prompt_template = """    
     Given the chat history as an array of pair, the first element being the role and the second element being the content.
-    You are in the middle of a chat with a human. Answer the question based on your powerful knowledge and the given context.\n\n
+    You are in the middle of a chat with a human. Answer the question based on the given context and the rules given only.\n\n
     
     Chat History:\n{chat_history}\n
     Context:\n{context}\n
+    Rules:\n{rules}\n
     Question: \n{question}\n
     """
 
     # Create a prompt template with input variables "context" and "question"
     prompt = PromptTemplate(
-        template=prompt_template, input_variables=["context", "question", "chat_history"]
+        template=prompt_template, input_variables=["context", "question", "chat_history", "rules"]
     )
 
     # Load a question-answering chain with the specified model and prompt
@@ -124,11 +125,19 @@ def user_input(user_question):
         cur_db = FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings, allow_dangerous_deserialization=True)
         docs.extend(cur_db.similarity_search(user_question))
     
+    rules = []
+    if os.path.exists(f"./faiss_index/rules"):
+        rules_db = FAISS.load_local(f"./faiss_index/rules", st.session_state.embeddings, allow_dangerous_deserialization=True)
+        rules = rules_db.similarity_search(user_question)
+        
+    print(rules)
+    
     try:
         # Use the conversational chain to get a response based on the user question and retrieved documents
         response = st.session_state.chain(
             {
                 "input_documents": docs,
+                "rules": rules,
                 "question": user_question,
                 "chat_history": st.session_state.messages
             },
@@ -166,6 +175,10 @@ def initialize_session_state():
             os.makedirs("text_files")
         if not os.path.exists("summarized_files"):
             os.makedirs("summarized_files")
+        if not os.path.exists("faiss_index"):
+            os.makedirs("faiss_index")
+        if not os.path.exists("rules"):
+            os.makedirs("rules")
         st.session_state.messages = []
         safety_settings = {
             HarmCategory.HARM_CATEGORY_UNSPECIFIED: HarmBlockThreshold.BLOCK_NONE,
@@ -201,3 +214,25 @@ def process_vector_space_level2(filename):
         text = get_text_file(f"text_files/{filename}")
     chunks = get_chunks(text)
     add_vector_store(chunks, filename)
+    
+def process_vector_space_level2_rules():
+    if os.path.exists(f"./faiss_index/rules"):
+        os.remove(f"./faiss_index/rules/index.faiss")
+        os.remove(f"./faiss_index/rules/index.pkl")
+        os.rmdir(f"./faiss_index/rules")
+    excluded_files = []
+    with open("excluded_files.txt", "r") as f:
+        excluded_files = f.read().splitlines()
+    dir = os.listdir("rules")
+    chunks = []
+    for file in dir:
+        if file in excluded_files:
+            continue
+        text = get_text_file(f"rules/{file}")
+        chunks.append(text)
+    if len(chunks) == 0:
+        return
+    print(chunks)
+    vector_store = FAISS.from_texts(chunks, embedding=st.session_state.embeddings)
+    vector_store.save_local(f"./faiss_index/rules")
+        
