@@ -122,12 +122,12 @@ def user_input(user_question):
     
     docs = []
     for file in docs_to_search:
-        cur_db = FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings, allow_dangerous_deserialization=True)
+        cur_db = FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings)
         docs.extend(cur_db.similarity_search(user_question))
     
     rules = []
     if os.path.exists(f"./faiss_index/rules"):
-        rules_db = FAISS.load_local(f"./faiss_index/rules", st.session_state.embeddings, allow_dangerous_deserialization=True)
+        rules_db = FAISS.load_local(f"./faiss_index/rules", st.session_state.embeddings)
         rules = rules_db.similarity_search(user_question)
     
     try:
@@ -224,10 +224,11 @@ def process_vector_space_level2_rules():
     dir = os.listdir("rules")
     chunks = []
     for file in dir:
-        if file in excluded_files:
+        if (file[:-4] + "_txt.txt") in excluded_files:
             continue
         text = get_text_file(f"rules/{file}")
         chunks.append(text)
+    print(chunks)
     if len(chunks) == 0:
         return
     vector_store = FAISS.from_texts(chunks, embedding=st.session_state.embeddings)
