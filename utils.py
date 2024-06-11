@@ -122,12 +122,12 @@ def user_input(user_question):
     
     docs = []
     for file in docs_to_search:
-        cur_db = FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings)
+        cur_db = FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings, allow_dangerous_deserialization=True)
         docs.extend(cur_db.similarity_search(user_question))
     
     rules = []
     if os.path.exists(f"./faiss_index/rules"):
-        rules_db = FAISS.load_local(f"./faiss_index/rules", st.session_state.embeddings)
+        rules_db = FAISS.load_local(f"./faiss_index/rules", st.session_state.embeddings, allow_dangerous_deserialization=True)
         rules = rules_db.similarity_search(user_question)
     
     try:
