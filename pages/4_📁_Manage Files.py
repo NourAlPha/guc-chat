@@ -147,7 +147,10 @@ def main():
         else:
             with open(f"text_files/{file_list}" if not st.session_state.rules else f"rules/{file_list}", "r") as f:
                 text = f.read()
-            update_text = st.text_area("File content: ", text, height=300)
+            if st.session_state.rules:
+                update_text = st.text_area("File content: ", text, height=300, max_chars=2000)
+            else:
+                update_text = st.text_area("File content: ", text, height=300)
             col0, col1, col2, col3 = st.columns([2, 5, 5, 6])
             with col1:
                 with stylable_container(
