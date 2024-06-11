@@ -130,6 +130,10 @@ def user_input(user_question):
         rules_db = FAISS.load_local(f"./faiss_index/rules", st.session_state.embeddings)
         rules = rules_db.similarity_search(user_question)
     
+    print(docs)
+    print("#"*50)
+    print(rules)
+    
     try:
         # Use the conversational chain to get a response based on the user question and retrieved documents
         response = st.session_state.chain(
@@ -228,7 +232,6 @@ def process_vector_space_level2_rules():
             continue
         text = get_text_file(f"rules/{file}")
         chunks.append(text)
-    print(chunks)
     if len(chunks) == 0:
         return
     vector_store = FAISS.from_texts(chunks, embedding=st.session_state.embeddings)
