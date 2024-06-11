@@ -70,7 +70,8 @@ def process_conversational_chain_docs():
     # Define a prompt template for asking questions based on a given context
     prompt_template = """    
     Given the chat history as an array of pair, the first element being the role and the second element being the content.
-    You are in the middle of a chat with a human. Answer the question based on the given context and the rules given only.\n\n
+    You are in the middle of a chat with a human. Answer the question based on the given context and the rules given only.
+    Do not mention anything about the rules or the context in your response.\n\n
     
     Chat History:\n{chat_history}\n
     Context:\n{context}\n
