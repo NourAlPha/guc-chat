@@ -71,16 +71,16 @@ def process_conversational_chain_docs():
     # Define a prompt template for asking questions based on a given context
     prompt_template = """    
     You are a chat assistant bot for helping students in university named German University in Cairo (GUC). \
-    Use the following pieces of retrieved context and rules to answer the query. \
+    Use the following pieces of retrieved context and rules to formulate an answer for the list of questions given. \
     
     Context:\n{context}\n
     Rules:\n{rules}\n
-    Question:\n{question}\n
+    Questions:\n{questions}\n
     """
 
     # Create a prompt template with input variables "context" and "question"
     prompt = PromptTemplate(
-        template=prompt_template, input_variables=["context", "rules", "question"]
+        template=prompt_template, input_variables=["context", "rules", "questions"]
     )
 
     # Load a question-answering chain with the specified model and prompt
@@ -116,7 +116,6 @@ def generate_query_based_on_chat_history(question):
     for i in range(len(all)):
         all[i] = all[i].strip()
     all = list(set(all))
-    all = [x for x in all if x != question]
     all = [x for x in all if x != ""]
     return all
 
@@ -149,7 +148,6 @@ def generate_query_based_on_context(query, context):
             all[i] = all[i][1:]
         all[i] = all[i].strip()
     all = list(set(all))
-    all = [x for x in all if x != query]
     all = [x for x in all if x != ""]
     return all
     
@@ -171,53 +169,59 @@ def process_relevant_docs():
 
 def user_input(user_question):
     
-    questions = generate_query_based_on_chat_history(user_question)
-    if len(questions) > 0:
-        user_question = questions[0]    
+    try:
+        questions = generate_query_based_on_chat_history(user_question)
+        if len(questions) > 0:
+            user_question = questions[0]    
 
-    docs_to_search_str = st.session_state.chain2({
-        "input_documents": st.session_state.docs,
-        "question": user_question,
-    })["output_text"]
-    
-    try:
-        docs_to_search = eval(docs_to_search_str)
-    except Exception as e:
-        docs_to_search = []
-        for i in range(len(docs_to_search_str)):
-            for j in range(i, len(docs_to_search_str)):
-                if docs_to_search_str[i:j+1] in os.listdir("summarized_files"):
-                    docs_to_search.append(docs_to_search_str[i:j+1])
-    
-    content_db = []
-    rules_db = []
-    all_context = []
-    for file in docs_to_search:
-        content_db.append(FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings, allow_dangerous_deserialization=True))
-        for doc in list(content_db[-1].docstore._dict.values()):
-            all_context.append(doc.page_content)
-    if os.path.exists(f"./faiss_index/rules"):
-        rules_db = FAISS.load_local(f"./faiss_index/rules", st.session_state.embeddings, allow_dangerous_deserialization=True)
-        for doc in list(rules_db.docstore._dict.values()):
-            all_context.append(doc.page_content)
-    
-    new_queries = generate_query_based_on_context(user_question, all_context)
-    
-    docs = []
-    rules = []
-    for query in new_queries:
-        for db in content_db:
-            docs.extend(db.similarity_search(query))
+        docs_to_search_str = st.session_state.chain2({
+            "input_documents": st.session_state.docs,
+            "question": user_question,
+        })["output_text"]
+        
+        try:
+            docs_to_search = eval(docs_to_search_str)
+        except Exception as e:
+            docs_to_search = []
+            for i in range(len(docs_to_search_str)):
+                for j in range(i, len(docs_to_search_str)):
+                    if docs_to_search_str[i:j+1] in os.listdir("summarized_files"):
+                        docs_to_search.append(docs_to_search_str[i:j+1])
+        
+        content_db = []
+        rules_db = []
+        all_context = []
+        for file in docs_to_search:
+            content_db.append(FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings, allow_dangerous_deserialization=True))
+            for doc in list(content_db[-1].docstore._dict.values()):
+                all_context.append(doc.page_content)
         if os.path.exists(f"./faiss_index/rules"):
-            rules.extend(rules_db.similarity_search(query))
-            
-    try:
+            rules_db = FAISS.load_local(f"./faiss_index/rules", st.session_state.embeddings, allow_dangerous_deserialization=True)
+            for doc in list(rules_db.docstore._dict.values()):
+                all_context.append(doc.page_content)
+        
+        new_queries = generate_query_based_on_context(user_question, all_context)
+        
+        docs = []
+        rules = []
+        for query in new_queries:
+            for db in content_db:
+                cur_search = db.similarity_search(query)
+                for doc in cur_search:
+                    if doc not in docs:
+                        docs.append(doc)
+            if os.path.exists(f"./faiss_index/rules"):
+                cur_search = rules_db.similarity_search(query)
+                for doc in cur_search:
+                    if doc not in rules:
+                        rules.append(doc)
+        
         # Use the conversational chain to get a response based on the user question and retrieved documents
         response = st.session_state.chain(
             {
                 "input_documents": docs,
                 "rules": rules,
-                "question": user_question,
+                "questions": new_queries,
             },
             return_only_outputs=True)["output_text"]
     except Exception as e:
