@@ -81,7 +81,7 @@ def process_conversational_chain_docs(questions, context, rules):
             ("human", "{input}"),
         ]
     )
-    
+
     query = contextualize_q_prompt.format(input=questions, context=context, rules=rules)
         
     all = st.session_state.model.invoke(query).content
