@@ -67,25 +67,26 @@ def add_vector_store(text_chunks, filename):
     # Save the vector store locally with the name "faiss_index"
     vector_store.save_local(f"./faiss_index/{filename[:-4] + ('_pdf' if filename[-4:] == '.pdf' else '_txt')}")
 
-def process_conversational_chain_docs():
-    # Define a prompt template for asking questions based on a given context
-    prompt_template = """    
+def process_conversational_chain_docs(questions, context, rules):
+    contextualize_q_system_prompt = """
     You are a chat assistant bot for helping students in university named German University in Cairo (GUC). \
     Use the following pieces of retrieved context and rules only to formulate a single detailed answer for the list of questions given. \
-    If you cannot formulate an answer from the given retrieved context and rules, tell the user to ask inside the GUC scope in a chatty way. \
-    
-    Context:\n{context}\n
-    Rules:\n{rules}\n
-    Questions:\n{questions}\n
+    If you cannot formulate an answer from the given retrieved context and rules, tell the user to ask inside the GUC scope in a chatty way.
     """
-
-    # Create a prompt template with input variables "context" and "question"
-    prompt = PromptTemplate(
-        template=prompt_template, input_variables=["context", "rules", "questions"]
+    contextualize_q_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("context"),
+            MessagesPlaceholder("rules"),
+            ("human", "{input}"),
+        ]
     )
-
-    # Load a question-answering chain with the specified model and prompt
-    st.session_state.chain = load_qa_chain(llm=st.session_state.model, chain_type="stuff", prompt=prompt)
+    
+    query = contextualize_q_prompt.format(input=questions, context=context, rules=rules)
+        
+    all = st.session_state.model.invoke(query).content
+    
+    return all
 
 def generate_query_based_on_chat_history(question):
     contextualize_q_system_prompt = """
@@ -124,6 +125,7 @@ def generate_query_based_on_context(query, context):
     contextualize_q_system_prompt = """
     Given context and the latest user question which might reference the context given, formulate a five different \
     versions of the given user question to retrieve relevant documents from a vector database. \
+    All of the five formulated questions must have the same semantic meaning as the user question. \
     By generating multiple perspectives on the user question, your goal is to help \
     the user overcome some of the limitations of the distance-based similarity search. \
     If the user question is greeting or thanking, return it as is. \
@@ -152,33 +154,38 @@ def generate_query_based_on_context(query, context):
     all = [x for x in all if x != ""]
     return all
     
-def process_relevant_docs():
-    prompt = PromptTemplate(
-        template="""
-            Given textfiles and user question which might reference context in the textfiles,\
-            return a list of most relevant documents' names. Do NOT answer the question,\
-            just return a list of most relevant documents' names otherwise say no relevant documents' names.\n\n
-            textfiles:\n{context}\n\n
-            question:\n{question}\n\n
-            
-            relevant documents list: 
-        """,
-        input_variables=["question", "textfiles"]
+def get_relevant_docs(query, context):
+    contextualize_q_system_prompt = """
+    Given textfiles and user question which might reference context in the textfiles,\
+    return a list of most relevant documents' names. Do NOT answer the question,\
+    just return a list of most relevant documents' names otherwise say no relevant documents' names.
+    """
+    contextualize_q_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("textfiles"),
+            ("human", "{input}"),
+        ]
     )
     
-    st.session_state.chain2 = load_qa_chain(llm=st.session_state.model2, chain_type="stuff", prompt=prompt)
+    query = contextualize_q_prompt.format(input=query, textfiles=context)
+    
+    all = st.session_state.model2.invoke(query).content
+        
+    return all
 
 def user_input(user_question):
     
     try:
         questions = generate_query_based_on_chat_history(user_question)
         if len(questions) > 0:
-            user_question = questions[0]    
+            user_question = questions[0]
+            
+        summarized_docs = []
+        for doc in st.session_state.docs:
+            summarized_docs.append(doc.page_content)
 
-        docs_to_search_str = st.session_state.chain2({
-            "input_documents": st.session_state.docs,
-            "question": user_question,
-        })["output_text"]
+        docs_to_search_str = get_relevant_docs(user_question, summarized_docs)
         
         try:
             docs_to_search = eval(docs_to_search_str)
@@ -188,7 +195,7 @@ def user_input(user_question):
                 for j in range(i, len(docs_to_search_str)):
                     if docs_to_search_str[i:j+1] in os.listdir("summarized_files"):
                         docs_to_search.append(docs_to_search_str[i:j+1])
-        
+                
         content_db = []
         rules_db = []
         all_context = []
@@ -202,29 +209,23 @@ def user_input(user_question):
                 all_context.append(doc.page_content)
         
         new_queries = generate_query_based_on_context(user_question, all_context)
-        
+                
         docs = []
         rules = []
         for query in new_queries:
             for db in content_db:
                 cur_search = db.similarity_search(query)
                 for doc in cur_search:
-                    if doc not in docs:
-                        docs.append(doc)
+                    if doc.page_content not in docs:
+                        docs.append(doc.page_content)
             if os.path.exists(f"./faiss_index/rules"):
                 cur_search = rules_db.similarity_search(query)
                 for doc in cur_search:
-                    if doc not in rules:
-                        rules.append(doc)
-        
+                    if doc.page_content not in rules:
+                        rules.append(doc.page_content)
+            
         # Use the conversational chain to get a response based on the user question and retrieved documents
-        response = st.session_state.chain(
-            {
-                "input_documents": docs,
-                "rules": rules,
-                "questions": new_queries,
-            },
-            return_only_outputs=True)["output_text"]
+        response = process_conversational_chain_docs(new_queries, docs, rules)
     except Exception as e:
         try:
             response = st.session_state.model.invoke(user_question).content
@@ -273,8 +274,6 @@ def initialize_session_state():
         st.session_state.model = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0, safety_settings=safety_settings)
         st.session_state.model2 = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0, safety_settings=safety_settings)
         st.session_state.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
-        process_conversational_chain_docs()
-        process_relevant_docs()
         process_vector_space_level1()
         genai.configure(api_key=os.getenv("GOOGLE_API_KEY")) # Loads API key
 
