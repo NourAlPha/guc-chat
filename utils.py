@@ -6,12 +6,13 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from langchain.chains.llm import LLMChain
-from langchain.chains.combine_documents.stuff import StuffDocumentsChain
 from langchain_community.document_loaders import PyPDFLoader, TextLoader
 import time
 from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 import google.generativeai as genai
 from google.generativeai.types.safety_types import HarmBlockThreshold, HarmCategory
+from langchain_core.messages import HumanMessage, AIMessage
 
 def get_pdf_file(pdf_file_path):
     # Create a PdfReader object for the specified PDF file
@@ -69,32 +70,97 @@ def add_vector_store(text_chunks, filename):
 def process_conversational_chain_docs():
     # Define a prompt template for asking questions based on a given context
     prompt_template = """    
-    Given the chat history as an array of pair, the first element being the role and the second element being the content.
-    You are in the middle of a chat with a human. Answer the question based on the given context and the rules given only.\n\n
+    You are a chat assistant bot for helping students in university named German University in Cairo (GUC). \
+    Use the following pieces of retrieved context and rules to answer the query. \
     
-    Chat History:\n{chat_history}\n
     Context:\n{context}\n
     Rules:\n{rules}\n
-    Question: \n{question}\n
+    Question:\n{question}\n
     """
 
     # Create a prompt template with input variables "context" and "question"
     prompt = PromptTemplate(
-        template=prompt_template, input_variables=["context", "question", "chat_history", "rules"]
+        template=prompt_template, input_variables=["context", "rules", "question"]
     )
 
     # Load a question-answering chain with the specified model and prompt
     st.session_state.chain = load_qa_chain(llm=st.session_state.model, chain_type="stuff", prompt=prompt)
 
+def generate_query_based_on_chat_history(question):
+    contextualize_q_system_prompt = """
+    Given a chat history and the latest user question which might reference context in the chat history, \
+    formulate a standalone question which can be understood without the chat history. \
+    If the user question is greeting or thanking, return it as is. \
+    Do NOT answer the question, just reformulate it if needed and otherwise return it as is."""
+    contextualize_q_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("chat_history"),
+            ("human", "{input}"),
+        ]
+    )
+    
+    chat_history = []
+    for message in st.session_state.messages:
+        if message["role"] == "user":
+            chat_history.append(HumanMessage(content=message["content"]))
+        else:
+            chat_history.append(AIMessage(content=message["content"]))
+    chat_history = chat_history[:-1]
+        
+    query = contextualize_q_prompt.format(chat_history=chat_history, input=question)
+    
+    all = st.session_state.model2.invoke(query).content
+            
+    all = all.split("\n")
+    for i in range(len(all)):
+        all[i] = all[i].strip()
+    all = list(set(all))
+    all = [x for x in all if x != question]
+    all = [x for x in all if x != ""]
+    return all
+
+def generate_query_based_on_context(query, context):
+    contextualize_q_system_prompt = """
+    Given context and the latest user question which might reference the context given, formulate a five different \
+    versions of the given user question to retrieve relevant documents from a vector database. \
+    By generating multiple perspectives on the user question, your goal is to help \
+    the user overcome some of the limitations of the distance-based similarity search. \
+    If the user question is greeting or thanking, return it as is. \
+    Provide these alternative questions separated by newlines. \
+    Do NOT answer the question, just reformulate it if needed and otherwise return it as is.
+    """
+    contextualize_q_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("context"),
+            ("human", "{input}"),
+        ]
+    )
+    
+    query = contextualize_q_prompt.format(input=query, context=context)
+    
+    all = st.session_state.model2.invoke(query).content
+        
+    all = all.split("\n")
+    for i in range(len(all)):
+        all[i] = all[i].strip()
+        if len(all[i]) > 0 and all[i][0] == '-':
+            all[i] = all[i][1:]
+        all[i] = all[i].strip()
+    all = list(set(all))
+    all = [x for x in all if x != query]
+    all = [x for x in all if x != ""]
+    return all
+    
 def process_relevant_docs():
     prompt = PromptTemplate(
         template="""
-            Given a set of textfiles, chat history and a query, you are asked to find the most relevant documents
-            based on the query and the chat history. Return only the names of the most relevant documents as a python list.\n\n
-            
-            textfiles: {context}\n\n
-            Chat History: {chat_history}\n\n
-            query: {question}\n\n
+            Given textfiles and user question which might reference context in the textfiles,\
+            return a list of most relevant documents' names. Do NOT answer the question,\
+            just return a list of most relevant documents' names otherwise say no relevant documents' names.\n\n
+            textfiles:\n{context}\n\n
+            question:\n{question}\n\n
             
             relevant documents list: 
         """,
@@ -105,12 +171,15 @@ def process_relevant_docs():
 
 def user_input(user_question):
     
+    questions = generate_query_based_on_chat_history(user_question)
+    if len(questions) > 0:
+        user_question = questions[0]    
+
     docs_to_search_str = st.session_state.chain2({
         "input_documents": st.session_state.docs,
         "question": user_question,
-        "chat_history": st.session_state.messages
     })["output_text"]
-        
+    
     try:
         docs_to_search = eval(docs_to_search_str)
     except Exception as e:
@@ -120,16 +189,28 @@ def user_input(user_question):
                 if docs_to_search_str[i:j+1] in os.listdir("summarized_files"):
                     docs_to_search.append(docs_to_search_str[i:j+1])
     
-    docs = []
+    content_db = []
+    rules_db = []
+    all_context = []
     for file in docs_to_search:
-        cur_db = FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings, allow_dangerous_deserialization=True)
-        docs.extend(cur_db.similarity_search(user_question))
-    
-    rules = []
+        content_db.append(FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings, allow_dangerous_deserialization=True))
+        for doc in list(content_db[-1].docstore._dict.values()):
+            all_context.append(doc.page_content)
     if os.path.exists(f"./faiss_index/rules"):
         rules_db = FAISS.load_local(f"./faiss_index/rules", st.session_state.embeddings, allow_dangerous_deserialization=True)
-        rules = rules_db.similarity_search(user_question)
+        for doc in list(rules_db.docstore._dict.values()):
+            all_context.append(doc.page_content)
     
+    new_queries = generate_query_based_on_context(user_question, all_context)
+    
+    docs = []
+    rules = []
+    for query in new_queries:
+        for db in content_db:
+            docs.extend(db.similarity_search(query))
+        if os.path.exists(f"./faiss_index/rules"):
+            rules.extend(rules_db.similarity_search(query))
+            
     try:
         # Use the conversational chain to get a response based on the user question and retrieved documents
         response = st.session_state.chain(
@@ -137,7 +218,6 @@ def user_input(user_question):
                 "input_documents": docs,
                 "rules": rules,
                 "question": user_question,
-                "chat_history": st.session_state.messages
             },
             return_only_outputs=True)["output_text"]
     except Exception as e:
