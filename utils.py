@@ -272,7 +272,7 @@ def initialize_session_state():
             HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
             HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
         }
-        st.session_state.model = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0, safety_settings=safety_settings)
+        st.session_state.model = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0.7, safety_settings=safety_settings)
         st.session_state.model2 = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0, safety_settings=safety_settings)
         st.session_state.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
         process_vector_space_level1()
