@@ -71,7 +71,7 @@ def process_conversational_chain_docs():
     # Define a prompt template for asking questions based on a given context
     prompt_template = """    
     You are a chat assistant bot for helping students in university named German University in Cairo (GUC). \
-    Use the following pieces of retrieved context and rules only to formulate a single answer for the list of questions given. \
+    Use the following pieces of retrieved context and rules only to formulate a single detailed answer for the list of questions given. \
     If you cannot formulate an answer from the given retrieved context and rules, tell the user to ask inside the GUC scope in a chatty way. \
     
     Context:\n{context}\n
