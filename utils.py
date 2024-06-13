@@ -67,7 +67,7 @@ def add_vector_store(text_chunks, filename):
     # Save the vector store locally with the name "faiss_index"
     vector_store.save_local(f"./faiss_index/{filename[:-4] + ('_pdf' if filename[-4:] == '.pdf' else '_txt')}")
 
-def process_conversational_chain_docs(questions, context, rules):
+def process_conversational_chain_docs(questions, documents, rules):
     contextualize_q_system_prompt = """
     You are a chat assistant bot for helping students in university named German University in Cairo (GUC). \
     Use the following pieces of retrieved documents and rules only to formulate a single detailed answer for the list of questions given. \
@@ -77,13 +77,13 @@ def process_conversational_chain_docs(questions, context, rules):
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", contextualize_q_system_prompt),
-            MessagesPlaceholder("context"),
+            MessagesPlaceholder("documents"),
             MessagesPlaceholder("rules"),
-            ("human", "{input}"),
+            ("human", "{questions}"),
         ]
     )
 
-    query = contextualize_q_prompt.format(input=questions, context=context, rules=rules)
+    query = contextualize_q_prompt.format(questions=questions, documents=documents, rules=rules)
         
     all = st.session_state.model.invoke(query).content
     
