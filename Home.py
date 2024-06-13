@@ -20,7 +20,6 @@ st.markdown("""
 st.markdown("""
             ### 🛠 What You Can Do:
             - Go To `Chat` page to chat with me
-                - Ask me any question generally you have in mind
-                - You can also ask me specific questions about the GUC
+                - Ask me any question you have in mind about the GUC
                 - I will try to help you with the answer
             """)

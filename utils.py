@@ -315,7 +315,7 @@ def process_vector_space_level2_rules():
         if (file[:-4] + "_txt.txt") in excluded_files:
             continue
         text = get_text_file(f"rules/{file}")
-        text = "DOCUMENT NAME: " + file[:-4] + "\n" + text + "\n"
+        text = "RULE NAME: " + file[:-4] + "\n" + text + "\n"
         chunks.append(text)
     if len(chunks) == 0:
         return
