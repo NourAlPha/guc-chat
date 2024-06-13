@@ -71,8 +71,8 @@ def process_conversational_chain_docs(questions, context, rules):
     contextualize_q_system_prompt = """
     You are a chat assistant bot for helping students in university named German University in Cairo (GUC). \
     Use the following pieces of retrieved context and rules only to formulate a single detailed answer for the list of questions given. \
-    If the user question is greeting or thanking, respond with a greeting or thanking message. \
-    If you cannot formulate an answer from the given retrieved context and rules, tell the user to ask inside the GUC scope in a chatty way.
+    If the list of questions contains greeting or thanking, respond with a greeting or thanking message. \
+    If you cannot formulate an answer from the given retrieved context and rules, tell the user to ask inside the GUC scope in a chatty way. \
     """
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
@@ -94,7 +94,8 @@ def generate_query_based_on_chat_history(question):
     Given a chat history and the latest user question which might reference context in the chat history, \
     formulate a standalone question which can be understood without the chat history. \
     If the user question is greeting or thanking, return it as is. \
-    Do NOT answer the question, just reformulate it if needed and otherwise return it as is."""
+    Do NOT answer the question, just reformulate it if needed and otherwise return it as is. \
+    """
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", contextualize_q_system_prompt),
@@ -131,7 +132,7 @@ def generate_query_based_on_context(query, context):
     the user overcome some of the limitations of the distance-based similarity search. \
     If the user question is greeting or thanking, return it as is. \
     Provide these alternative questions separated by newlines. \
-    Do NOT answer the question, just reformulate it if needed and otherwise return it as is.
+    Do NOT answer the question, just reformulate it if needed and otherwise return it as is. \
     """
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
@@ -159,7 +160,7 @@ def get_relevant_docs(query, context):
     contextualize_q_system_prompt = """
     Given textfiles and user question which might reference context in the textfiles,\
     return a list of most relevant documents' names. Do NOT answer the question,\
-    just return a list of most relevant documents' names otherwise say no relevant documents' names.
+    just return a list of most relevant documents' names otherwise say no relevant documents' names.\
     """
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
@@ -296,6 +297,8 @@ def process_vector_space_level2(filename):
     else:
         text = get_text_file(f"text_files/{filename}")
     chunks = get_chunks(text)
+    for i in range(len(chunks)):
+        chunks[i] = "DOCUMENT NAME: " + filename[:-4] + "\n" + chunks[i] + "\n"
     add_vector_store(chunks, filename)
     
 def process_vector_space_level2_rules():
@@ -312,6 +315,7 @@ def process_vector_space_level2_rules():
         if (file[:-4] + "_txt.txt") in excluded_files:
             continue
         text = get_text_file(f"rules/{file}")
+        text = "DOCUMENT NAME: " + file[:-4] + "\n" + text + "\n"
         chunks.append(text)
     if len(chunks) == 0:
         return
