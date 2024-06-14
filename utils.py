@@ -123,26 +123,25 @@ def generate_query_based_on_chat_history(question):
     all = [x for x in all if x != ""]
     return all
 
-def generate_query_based_on_context(query, context):
+def generate_multiple_queries(query):
     contextualize_q_system_prompt = """
-    Given context and the latest user question which might reference the context given, formulate a five different \
+    You are an AI language model assistant. Your task is to generate five different \
     versions of the given user question to retrieve relevant documents from a vector database. \
     All of the five formulated questions must have the same semantic meaning as the user question. \
     By generating multiple perspectives on the user question, your goal is to help \
     the user overcome some of the limitations of the distance-based similarity search. \
     If the user question is greeting or thanking, return it as is. \
     Provide these alternative questions separated by newlines. \
-    Do NOT answer the question, just reformulate it if needed and otherwise return it as is. \
+    Do NOT answer the question, just reformulate it into different versions of the given user questions. \
     """
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", contextualize_q_system_prompt),
-            MessagesPlaceholder("context"),
             ("human", "{input}"),
         ]
     )
     
-    query = contextualize_q_prompt.format(input=query, context=context)
+    query = contextualize_q_prompt.format(input=query)
     
     all = st.session_state.model2.invoke(query).content
         
@@ -154,6 +153,7 @@ def generate_query_based_on_context(query, context):
         all[i] = all[i].strip()
     all = list(set(all))
     all = [x for x in all if x != ""]
+    all = [x for x in all if x != query]
     return all
     
 def get_relevant_docs(query, context):
@@ -182,7 +182,7 @@ def user_input(user_question):
         questions = generate_query_based_on_chat_history(user_question)
         if len(questions) > 0:
             user_question = questions[0]
-            
+
         summarized_docs = []
         for doc in st.session_state.docs:
             summarized_docs.append(doc.page_content)
@@ -197,21 +197,18 @@ def user_input(user_question):
                 for j in range(i, len(docs_to_search_str)):
                     if docs_to_search_str[i:j+1] in os.listdir("summarized_files"):
                         docs_to_search.append(docs_to_search_str[i:j+1])
-                
+
+        new_queries = [user_question]
+        new_queries.extend(generate_multiple_queries(user_question))
+        new_queries = list(set(new_queries)) 
+
         content_db = []
         rules_db = []
-        all_context = []
         for file in docs_to_search:
             content_db.append(FAISS.load_local(f"./faiss_index/{file[:-4]}", st.session_state.embeddings, allow_dangerous_deserialization=True))
-            for doc in list(content_db[-1].docstore._dict.values()):
-                all_context.append(doc.page_content)
         if os.path.exists(f"./faiss_index/rules"):
             rules_db = FAISS.load_local(f"./faiss_index/rules", st.session_state.embeddings, allow_dangerous_deserialization=True)
-            for doc in list(rules_db.docstore._dict.values()):
-                all_context.append(doc.page_content)
         
-        new_queries = generate_query_based_on_context(user_question, all_context)
-                
         docs = []
         rules = []
         for query in new_queries:
@@ -226,7 +223,6 @@ def user_input(user_question):
                     if doc.page_content not in rules:
                         rules.append(doc.page_content)
             
-        # Use the conversational chain to get a response based on the user question and retrieved documents
         response = process_conversational_chain_docs(new_queries, docs, rules)
     except Exception as e:
         try:
