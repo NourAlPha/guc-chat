@@ -70,6 +70,7 @@ def add_vector_store(text_chunks, filename):
 def process_conversational_chain_docs(questions, documents, rules):
     contextualize_q_system_prompt = """
     You are a chat assistant bot for helping students in university named German University in Cairo (GUC). \
+    You are now in the middle of a conversation with a student. \
     Use the following pieces of retrieved documents and rules only to formulate a single detailed answer for the list of questions given. \
     If the list of questions contains only greeting or thanking messages, respond with a chatty greeting or thanking message. \
     If you cannot formulate an answer from the given retrieved documents and rules, tell the user to ask inside the GUC scope in a chatty way. \
@@ -141,9 +142,9 @@ def generate_multiple_queries(query):
         ]
     )
     
-    query = contextualize_q_prompt.format(input=query)
+    prompt = contextualize_q_prompt.format(input=query)
     
-    all = st.session_state.model2.invoke(query).content
+    all = st.session_state.model2.invoke(prompt).content
         
     all = all.split("\n")
     for i in range(len(all)):
@@ -182,7 +183,7 @@ def user_input(user_question):
         questions = generate_query_based_on_chat_history(user_question)
         if len(questions) > 0:
             user_question = questions[0]
-
+        
         summarized_docs = []
         for doc in st.session_state.docs:
             summarized_docs.append(doc.page_content)
@@ -197,11 +198,10 @@ def user_input(user_question):
                 for j in range(i, len(docs_to_search_str)):
                     if docs_to_search_str[i:j+1] in os.listdir("summarized_files"):
                         docs_to_search.append(docs_to_search_str[i:j+1])
-
+        
         new_queries = [user_question]
         new_queries.extend(generate_multiple_queries(user_question))
-        new_queries = list(set(new_queries)) 
-
+        
         content_db = []
         rules_db = []
         for file in docs_to_search:
