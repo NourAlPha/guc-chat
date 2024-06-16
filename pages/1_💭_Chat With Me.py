@@ -29,7 +29,10 @@ def main():
     # Display the title of the chat interface
     st.title("💭 What's in your mind?")
     # Add a refresh button to clear the chat interface
-    if st.sidebar.button("🔄 Refresh"):
+    if st.sidebar.button("🆕 New Chat"):
+        for n in range(int(len(st.session_state.messages)/2)):
+            feedback_key = f"feedback_{n}"
+            st.session_state["_" + feedback_key] = None
         st.session_state.messages = []
     # Display previous chat messages
     for n, message in enumerate(st.session_state.messages):
@@ -62,10 +65,11 @@ def main():
         
         # Display response from the chatbot as a chat message
         with st.chat_message("assistant"):
+            # Append chatbot response to session state
+            st.session_state.messages.append({"role": "assistant", "content": response})
             # Write response with modified output (if any)
             st.write_stream(modify_output(response))
-        # Append chatbot response to session state
-        st.session_state.messages.append({"role": "assistant", "content": response})
+
         st.rerun()
 
 
