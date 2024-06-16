@@ -34,6 +34,18 @@ def main():
     fig = go.Figure(data=[go.Pie(labels=labels, values=values)])
     fig.update_layout(height=600)
     st.plotly_chart(fig, theme=None, height=800)
+    
+    if st.button("Reset statistics"):
+        feedbacks = {
+            "Great": 1,
+            "Good": 1,
+            "Average": 1,
+            "Poor": 1,
+            "Very Poor": 1,
+        }
+        with open("feedback.json", "w") as f:
+            json.dump(feedbacks, f)
+        st.rerun()
 
 if __name__ == "__main__":
     main()
