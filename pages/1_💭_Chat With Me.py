@@ -90,7 +90,7 @@ def main():
                     disable_with_score=st.session_state[feedback_key]["score"] if st.session_state[feedback_key] else None,
                 )
     # Accept user input in the chat interface
-    if prompt := st.chat_input("💭 What's in your mind?", on_submit=disable_buttons) or st.session_state.regenerating:
+    if prompt := st.chat_input("💭 What's in your mind?", on_submit=disable_buttons, disabled=st.session_state.making_output) or st.session_state.regenerating:
         # Display user input as a chat message
         if not st.session_state.regenerating:
             with st.chat_message("user"):
