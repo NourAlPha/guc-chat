@@ -3,6 +3,7 @@ from utils import make_output, modify_output, initialize_session_state
 from streamlit_feedback import streamlit_feedback
 import json
 import functools
+import os
 
 # Initialize session state with needed variables
 initialize_session_state()
@@ -39,6 +40,16 @@ def main():
                     page_icon="🤔")
     # Display the title of the chat interface
     st.title("💭 What's in your mind?")
+
+    if not os.path.exists("feedback.json"):
+        with open("feedback.json", "w") as f:
+            json.dump({
+                "Great": 0,
+                "Good": 0,
+                "Average": 0,
+                "Poor": 0,
+                "Very Poor": 0
+            }, f)
     
     col1, col2 = st.sidebar.columns([1, 1])
     

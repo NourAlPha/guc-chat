@@ -35,6 +35,17 @@ def main():
     fig.update_layout(height=600)
     st.plotly_chart(fig, theme=None, height=800)
 
+    if st.button("Reset Statistics"):
+        with open("feedback.json", "w") as f:
+            json.dump({
+                "Great": 0,
+                "Good": 0,
+                "Average": 0,
+                "Poor": 0,
+                "Very Poor": 0
+            }, f)
+        st.rerun()
+
 
 if __name__ == "__main__":
     main()
