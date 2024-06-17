@@ -42,21 +42,31 @@ def summarizeDocAndSave(file_name):
     else:
         loader = TextLoader(f"text_files/{file_name}")
     docs = loader.load_and_split()
+
+    docs_text = []
+    for doc in docs:
+        docs_text.append(doc.page_content)
     
-    prompt_template = """Write a concise summary in english of the following:
-    "{context}"
-    CONCISE SUMMARY:"""
-    prompt = PromptTemplate.from_template(prompt_template)
+    contextualize_q_system_prompt = """
+    You are an AI language model assistant. Your task is to write a concise \
+    summary of the given context. The summary should be detailed enough to \
+    be used for further relevance queries. The summary should contain the most common keywords in the context. \
+    The summary should not exceed 2000 characters. \
+    """
+    contextualize_q_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", contextualize_q_system_prompt),
+            MessagesPlaceholder("context")
+        ]
+    )
+
+    query = contextualize_q_prompt.format(context=docs_text)
     
-    stuff_chain = load_qa_chain(llm=st.session_state.model2, chain_type="stuff", prompt=prompt)
-        
-    summary = stuff_chain({
-        "input_documents": docs,
-    })
+    summary = st.session_state.model2.invoke(query).content
     
     with open(f"summarized_files/{file_name[:-4] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt", "w") as f:
         f.write(f"DOCUMENT NAME: {file_name[:-4] + ('_pdf' if file_name[-4:] == '.pdf' else '_txt')}.txt\n\n"
-                + summary["output_text"])
+                + summary)
     process_vector_space_level2(file_name)
     
 
@@ -230,7 +240,6 @@ def user_input(user_question):
         except Exception as e:
             response = "I'm sorry, I don't have an answer to that question."
             
-    # return response
     return response
     
 # Function to generate output based on a query
