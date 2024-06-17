@@ -82,13 +82,15 @@ def main():
                 if feedback_key not in st.session_state:
                     st.session_state[feedback_key] = None
                 _submit_feedback_partial = functools.partial(_submit_feedback, feedback_key=feedback_key)
-                streamlit_feedback(
-                    feedback_type="faces",
-                    key=feedback_key,
-                    on_submit=_submit_feedback_partial,
-                    align="center",
-                    disable_with_score=st.session_state[feedback_key]["score"] if st.session_state[feedback_key] else None,
-                )
+                disable_with_score = st.session_state[feedback_key]["score"] if st.session_state[feedback_key] else None
+                if n == len(st.session_state.messages) - 1 and not st.session_state.making_output:
+                    streamlit_feedback(
+                        feedback_type="faces",
+                        key=feedback_key,
+                        on_submit=_submit_feedback_partial,
+                        align="center",
+                        disable_with_score=disable_with_score,
+                    )
     # Accept user input in the chat interface
     if prompt := st.chat_input("💭 What's in your mind?", on_submit=disable_buttons, disabled=st.session_state.making_output) or st.session_state.regenerating:
         # Display user input as a chat message
