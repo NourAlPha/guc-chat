@@ -134,26 +134,25 @@ def generate_query_based_on_chat_history(question):
     all = [x for x in all if x != ""]
     return all
 
-def generate_multiple_queries(query, context):
+def generate_multiple_queries(query):
     contextualize_q_system_prompt = """
     You are an AI language model assistant. Your task is to generate five different \
-    versions of the given user question based on the given context to retrieve relevant documents from a vector database. \
+    versions of the given user question to retrieve relevant documents from a vector database. \
     All of the five formulated questions must have the same semantic meaning as the user question. \
     By generating multiple perspectives on the user question, your goal is to help \
     the user overcome some of the limitations of the distance-based similarity search. \
     If the user question is greeting or thanking, return it as is. \
     Provide these alternative questions separated by newlines. \
-    Do NOT answer the question, just reformulate it into different versions of the given user questions based on the given context. \
+    Do NOT answer the question, just reformulate it into different versions of the given user questions. \
     """
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", contextualize_q_system_prompt),
-            MessagesPlaceholder("context"),
             ("human", "{input}"),
         ]
     )
     
-    prompt = contextualize_q_prompt.format(input=query, context=context)
+    prompt = contextualize_q_prompt.format(input=query)
     
     all = st.session_state.model2.invoke(prompt).content
         
@@ -210,14 +209,8 @@ def user_input(user_question):
                     if docs_to_search_str[i:j+1] in os.listdir("summarized_files"):
                         docs_to_search.append(docs_to_search_str[i:j+1])
         
-        new_queries_context = []
-        for doc in docs_to_search:
-            for summary in summarized_docs:
-                if doc in summary:
-                    new_queries_context.append(summary)
-                    break
         new_queries = [user_question]
-        new_queries.extend(generate_multiple_queries(user_question, new_queries_context))
+        new_queries.extend(generate_multiple_queries(user_question))
         
         content_db = []
         rules_db = []
