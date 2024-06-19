@@ -83,6 +83,7 @@ def process_conversational_chain_docs(questions, documents, rules):
     You are now in the middle of a conversation with a student. \
     Use the following pieces of retrieved documents and rules only to formulate a single detailed answer for the list of questions given. \
     If the list of questions contains only greeting or thanking messages, respond with a chatty greeting or thanking message. \
+    Do NOT greet or thank the user if the list of questions does not contain any greeting or thanking messages. \
     If you cannot formulate an answer from the given retrieved documents and rules, tell the user to ask inside the GUC scope in a chatty way. \
     """
     contextualize_q_prompt = ChatPromptTemplate.from_messages(
