@@ -54,6 +54,7 @@ xargs sudo apt-get install -y < packages.txt
   1. Get API key from: https://aistudio.google.com/app/apikey
   2. Do the following script:
      ```bash
+     cd ~
      nano .bashrc
      (in the last line add)
      export GOOGLE_API_KEY="YourActualAPIKey" (without quotes)
