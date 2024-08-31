@@ -4,7 +4,7 @@
 
 This chat application leverages the capabilities of Gemini, a large language model, and prompt engineering techniques to create a dynamic and informative conversational experience. The application distinguishes itself by its exceptional flexibility and adaptability, facilitated by a Retrieval Augmented Generation (RAG) system. This enables the system to quickly incorporate, modify, or remove information from its knowledge base, ensuring that the chatbot remains up-to-date and provides accurate, relevant responses.
 
-The chatbot can then be asked about this data, offering quick and accurate responses based on the most recent information available. This flexibility makes it ideal for use cases where the underlying data needs to be frequently updated or customized, such as customer support, knowledge bases, or interactive learning platforms.
+The chatbot can then be asked about this data, offering quick and accurate responses based on the most recent information available. This flexibility makes it ideal for use cases where the underlying data needs to be frequently updated or customized.
 
 ## Demo
 
