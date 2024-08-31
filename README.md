@@ -4,7 +4,7 @@
 
 This project is a powerful chat application built using Streamlit, leveraging the Gemini architecture and prompt engineering techniques. It features a highly flexible database powered by Retrieval-Augmented Generation (RAG), allowing users to dynamically add, remove, and modify information within the database.
 
-The chatbot can then be queried about this data, offering quick and accurate responses based on the most recent information available. This flexibility makes it ideal for use cases where the underlying data needs to be frequently updated or customized, such as customer support, knowledge bases, or interactive learning platforms.
+The chatbot can then be asked about this data, offering quick and accurate responses based on the most recent information available. This flexibility makes it ideal for use cases where the underlying data needs to be frequently updated or customized, such as customer support, knowledge bases, or interactive learning platforms.
 
 ## Demo
 
