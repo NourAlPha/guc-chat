@@ -50,7 +50,7 @@ pip install -r requirements.txt
 xargs sudo apt-get install -y < packages.txt
 ```
 
-# 6. Get a Gemini API key and put it in enviroment variables:
+# 6. Get a Gemini API key and put it in environment variables:
   1. Get API key from: https://aistudio.google.com/app/apikey
   2. Do the following script:
      ```bash
